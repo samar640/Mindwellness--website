@@ -1,0 +1,7 @@
+packages:
+  - "artifacts/mindwellness"
+  - "artifacts/api-server"
+
+allowBuilds:
+  esbuild: true
+

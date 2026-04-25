@@ -1,0 +1,46 @@
+
+> @workspace/mindwellness@0.0.0 dev /home/runner/workspace/artifacts/mindwellness
+> vite --config vite.config.ts --host 0.0.0.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m1113[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m20677[22m/mindwellness/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.31.83.2:[1m20677[22m/mindwellness/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[RUNTIME_ERROR]{"type":"runtime-error","timestamp":1776921298782,"name":"Error","message":"Cannot read properties of undefined (reading 'title')","stack":"    at CbtFlow /home/runner/workspace/artifacts/mindwellness/src/pages/HealingPage.tsx:223:89\n\n\n\n\n\n\n\n\n","loc":{"line":223,"column":89,"file":"/home/runner/workspace/artifacts/mindwellness/src/pages/HealingPage.tsx"},"frame":"221|              transition={{ duration: 0.3 }}\n222|            >\n223|              <h3 className=\"text-2xl font-display font-medium mb-2 text-foreground\">{cur.title}</h3>\n   |                                                                                          ^\n224|              <p className=\"text-sm text-muted-foreground mb-5 leading-relaxed\">{cur.hint}</p>\n225|  "}
+
+[31mCould not open HealingPage.tsx in the editor.[39m
+
+
+[31mCould not open HealingPage.tsx in the editor.[39m
+
+
+[31mCould not open HealingPage.tsx in the editor.[39m
+
+
+[31mCould not open HealingPage.tsx in the editor.[39m
+

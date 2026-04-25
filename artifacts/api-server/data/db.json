@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": "db9a13bc-080d-4676-8fe6-7fa19215d388",
+      "email": "test@example.com",
+      "passwordHash": "$2b$12$rMZ79Ter7AjegEGnTOSzjuumlTuAO4U0JpH4qLQlyX6DiMO9EoqBi",
+      "createdAt": 1777048703765
+    },
+    {
+      "id": "bd221924-2e2a-4cd2-a280-27b4805f3a60",
+      "email": "samrattiwari038@gmail.com",
+      "passwordHash": "$2b$12$hlvhhwalUC6o4/Cqh20Pn.OIeUDz8qNIWFwEQld/AG0/vbWuelCoq",
+      "createdAt": 1777049090347
+    },
+    {
+      "id": "74b035e6-3e3f-487a-8cfe-135d8441a1aa",
+      "email": "flow@example.com",
+      "passwordHash": "$2b$12$ICoZvahHSRfx3uKnm0bTG.55YbEo7zJRWW/FrD9Ej8Ib.IVKgdt7S",
+      "createdAt": 1777051314736
+    }
+  ]
+}
