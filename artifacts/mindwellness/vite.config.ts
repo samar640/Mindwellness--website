@@ -10,7 +10,7 @@ const port = Number(process.env.PORT ?? 5173);
 const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
-  base: '/',
+  base: basePath,
   plugins: [
     react(),
     tailwindcss(),
@@ -32,6 +32,13 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
     strictPort: true,
+    proxy: {
+      "/api": {
+        target: process.env.VITE_API_URL || "http://localhost:5002",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],

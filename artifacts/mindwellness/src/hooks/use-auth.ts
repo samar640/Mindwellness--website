@@ -5,7 +5,11 @@ interface User {
   email: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, "")}/api`
+  : "/api";
+
+const authUrl = (path: string) => `${API_BASE}/auth/${path}`;
 
 const STORAGE_KEY = "mw_user";
 
@@ -55,7 +59,7 @@ export function useAuth() {
 
   const checkAuth = async () => {
     setIsLoading(true);
-    const result = await safeFetch(`${API_URL}/api/auth/me`);
+    const result = await safeFetch(authUrl("me"));
     const nextUser = result.ok && result.data ? (result.data as User) : null;
     setUser(nextUser);
     try {
@@ -66,7 +70,7 @@ export function useAuth() {
   };
 
   const login = async (email: string, password: string) => {
-    const result = await safeFetch(`${API_URL}/api/auth/login`, {
+    const result = await safeFetch(authUrl("login"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
@@ -78,7 +82,7 @@ export function useAuth() {
   };
 
   const register = async (email: string, password: string) => {
-    const result = await safeFetch(`${API_URL}/api/auth/register`, {
+    const result = await safeFetch(authUrl("register"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
@@ -90,7 +94,7 @@ export function useAuth() {
   };
 
   const forgotPassword = async (email: string) => {
-    const result = await safeFetch(`${API_URL}/api/auth/forgot-password`, {
+    const result = await safeFetch(authUrl("forgot-password"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim().toLowerCase() }),
@@ -100,7 +104,7 @@ export function useAuth() {
   };
 
   const resetPassword = async (token: string, newPassword: string) => {
-    const result = await safeFetch(`${API_URL}/api/auth/reset-password`, {
+    const result = await safeFetch(authUrl("reset-password"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, newPassword }),
@@ -110,7 +114,7 @@ export function useAuth() {
   };
 
   const logout = async () => {
-    await safeFetch(`${API_URL}/api/auth/logout`, { method: "POST" });
+    await safeFetch(authUrl("logout"), { method: "POST" });
     setUser(null);
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
   };

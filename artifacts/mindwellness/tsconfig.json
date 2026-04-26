@@ -17,5 +17,5 @@
     "types": ["node", "react", "react-dom", "vite/client"]
   },
   "include": ["src", "drizzle.config.ts", "users.ts", "vite.config.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/components/ChatbotOld.tsx"]
 }

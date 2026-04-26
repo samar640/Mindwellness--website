@@ -6,7 +6,10 @@
     "clean-start": "powershell -Command \"$ports = @(5002, 5173); foreach ($port in $ports) { $line = netstat -ano | findstr \\\":$port\\\"; if ($line) { $parts = $line -split '\\\\s+'; $pIdToKill = $parts[-1]; Write-Host \\\"Killing process $pIdToKill on port $port\\\"; taskkill /PID $pIdToKill /F; } else { Write-Host \\\"No process on port $port\\\" } }; pnpm dev\"",
     "dev": "powershell -Command \"& '.\\kill-ports.ps1'; concurrently -n API,WEB -c green,cyan \"pnpm -C artifacts/api-server dev\" \"pnpm -C artifacts/mindwellness dev\"\"",
     "dev:api": "pnpm -C artifacts/api-server dev",
-    "dev:web": "pnpm -C artifacts/mindwellness dev"
+    "dev:web": "pnpm -C artifacts/mindwellness dev",
+    "build:web": "pnpm --filter @workspace/mindwellness build",
+    "build:api": "pnpm --filter @mindful-space/api-server build",
+    "start:api": "pnpm --filter @mindful-space/api-server start"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

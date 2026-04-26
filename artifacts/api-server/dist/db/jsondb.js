@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 const defaultDb = { users: [] };
 function resolveDbPath() {
     const p = process.env["JSON_DB_PATH"] || "./data/db.json";
-    return path.resolve(p);
+    return path.isAbsolute(p) ? p : path.resolve(process.cwd(), p);
 }
 function ensureDbFile(dbPath) {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
