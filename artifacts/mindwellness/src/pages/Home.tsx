@@ -287,14 +287,16 @@ export default function Home() {
               {TRANSFORMATION_PHASES.map((phase, i) => {
                 const Icon = phase.icon;
                 return (
-                  <motion.div
+                  <motion.button
                     key={phase.title}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.08, duration: 0.45 }}
                     whileHover={{ y: -5 }}
-                    className={`group relative rounded-3xl border ${phase.border} bg-gradient-to-br ${phase.bg} p-6 shadow-lg transition-all duration-300 hover:shadow-xl hover:border-teal-300`}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate("/reset-plan")}
+                    className={`group relative rounded-3xl border ${phase.border} bg-gradient-to-br ${phase.bg} p-6 shadow-lg transition-all duration-300 hover:shadow-xl hover:border-teal-300 cursor-pointer text-left`}
                   >
                     <div className="flex items-center gap-3 mb-4">
                       <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${phase.tint} flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-105`}>
@@ -307,10 +309,14 @@ export default function Home() {
                     <p className="text-sm text-muted-foreground leading-relaxed mb-2">
                       <span className="font-semibold text-foreground">Content:</span> {phase.content}
                     </p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                       <span className="font-semibold text-foreground">Goal:</span> {phase.goal}
                     </p>
-                  </motion.div>
+                    <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:gap-2.5 transition-all">
+                      View Full Plan
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </motion.button>
                 );
               })}
             </div>

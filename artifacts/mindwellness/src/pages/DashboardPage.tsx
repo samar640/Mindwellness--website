@@ -12,6 +12,7 @@ import { Chatbot } from "@/components/Chatbot";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Calendar as CalendarView } from "@/components/ui/calendar";
 
 type MoodKey = "low" | "okay" | "good";
 type DashboardState = {
@@ -98,6 +99,8 @@ export default function DashboardPage() {
   const [all, setAll] = useState<DashboardState[]>([]);
   const [today, setToday] = useState<DashboardState>({ date: todayKey(), done: [], waterGlasses: 0 });
   const [goalDraft, setGoalDraft] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   useEffect(() => {
     const log = loadAll();
@@ -171,6 +174,17 @@ export default function DashboardPage() {
               <p className="text-slate-600 mt-4 text-sm md:text-base max-w-xl">
                 A simple, realistic plan for the next 24 hours — meals, movement, hydration and rest, shaped around how you're actually feeling today.
               </p>
+              <div className="mt-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setShowCalendar((current) => !current)}
+                >
+                  <Calendar className="w-4 h-4" />
+                  {showCalendar ? "Hide calendar" : "Show calendar"}
+                </Button>
+              </div>
             </div>
             <div className="flex flex-col items-end gap-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Today</span>
@@ -247,6 +261,79 @@ export default function DashboardPage() {
                 </div>
               </Card>
             </motion.div>
+
+            {showCalendar && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="border border-slate-200 shadow-md bg-white p-6 md:p-8 rounded-2xl">
+                  <div className="mb-8">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-blue-700 mb-2">Year Overview</p>
+                    <h3 className="text-2xl font-display font-medium text-slate-900">2026 at a glance</h3>
+                    <p className="text-sm text-slate-500 mt-2">Track your journey through the year</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const monthDate = new Date(2026, i, 1);
+                      const monthName = monthDate.toLocaleString('default', { month: 'long' });
+                      const daysInMonth = new Date(2026, i + 1, 0).getDate();
+                      const firstDayOfWeek = monthDate.getDay();
+                      const days = [];
+                      
+                      for (let j = 0; j < firstDayOfWeek; j++) days.push(null);
+                      for (let j = 1; j <= daysInMonth; j++) days.push(j);
+                      
+                      const isCurrentMonth = i === new Date().getMonth();
+                      const todayDate = new Date().getDate();
+                      
+                      return (
+                        <div key={i} className={`p-4 rounded-xl border-2 transition-all ${
+                          isCurrentMonth 
+                            ? 'border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md' 
+                            : 'border-slate-200 bg-white hover:border-blue-200 hover:shadow-sm'
+                        }`}>
+                          <h4 className={`font-semibold text-sm mb-3 ${
+                            isCurrentMonth ? 'text-blue-700' : 'text-slate-700'
+                          }`}>
+                            {monthName}
+                          </h4>
+                          
+                          <div className="grid grid-cols-7 gap-1">
+                            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                              <div key={day} className="text-center text-[10px] font-semibold text-slate-400 py-1">
+                                {day}
+                              </div>
+                            ))}
+                            
+                            {days.map((day, idx) => (
+                              <div
+                                key={idx}
+                                className={`text-center text-xs py-1.5 rounded-lg font-medium transition-all ${
+                                  day === null
+                                    ? 'text-transparent'
+                                    : isCurrentMonth && day === todayDate
+                                    ? 'bg-blue-500 text-white shadow-md font-bold'
+                                    : isCurrentMonth
+                                    ? 'text-blue-600 bg-blue-100/60 hover:bg-blue-200'
+                                    : 'text-slate-600 hover:bg-slate-100'
+                                }`}
+                              >
+                                {day}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <p className="text-xs text-slate-600">
+                      <span className="font-semibold text-blue-700">💡 Tip:</span> Each month represents a fresh opportunity. Plan ahead, but stay flexible. Your wellness journey is unique to you.
+                    </p>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
 
             {/* TODAY'S GOAL */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>

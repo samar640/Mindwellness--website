@@ -42,6 +42,17 @@ const fullTimeGreeting = () => {
   return { time, date, part, hour };
 };
 
+function applyBehaviorLayer(reply: Omit<Message, "id" | "from" | "time">): Omit<Message, "id" | "from" | "time"> {
+  const text = reply.text.trim();
+  const calmSuffix = " 🌿🙏💛✨🕊️";
+  const inviteExists = /(please ask|feel free|let me know|ask me|whenever you)/i.test(text);
+  const ending = `\n\nIf you'd like, I can also help with meditation, recovering after setbacks, a practical reset plan, or a grounded way to think about your money and daily balance. Please ask me more when you’re ready.`;
+  return {
+    ...reply,
+    text: `${text}${ending}${calmSuffix}`,
+  };
+}
+
 const HASH_TO_ROUTE: Record<string, string> = {
   "#wellness": "/wellness",
   "#breathe": "/breathe",
@@ -56,23 +67,65 @@ const HASH_TO_ROUTE: Record<string, string> = {
 
 // Wisdom library — quotes from books and great minds, woven into replies
 const WISDOM = {
-  beck:        { who: "Aaron T. Beck (father of CBT)",     line: "Your thoughts are not facts. The way you interpret an event matters more than the event itself." },
-  ellis:       { who: "Albert Ellis (REBT)",                line: "It's not what happens to you, but how you react to it that matters." },
-  burns:       { who: "David Burns (Feeling Good)",         line: "You feel the way you think. Change the thought, and the feeling will follow." },
-  dweck:       { who: "Carol S. Dweck (Mindset)",           line: "Becoming is better than being. The view you adopt for yourself profoundly affects how you live." },
-  ikigai:      { who: "Ikigai (Garcia & Miralles)",         line: "Only staying active will make you want to live a hundred years. Find a reason to get out of bed in the morning." },
-  vivekananda: { who: "Swami Vivekananda",                  line: "Arise, awake, and stop not till the goal is reached." },
-  vivekananda2:{ who: "Swami Vivekananda",                  line: "The greatest religion is to be true to your own nature. Have faith in yourselves." },
-  mandela:     { who: "Nelson Mandela",                     line: "It always seems impossible until it's done." },
-  mandela2:    { who: "Nelson Mandela",                     line: "The greatest glory in living lies not in never falling, but in rising every time we fall." },
-  hill:        { who: "Napoleon Hill (Think and Grow Rich)", line: "Whatever the mind can conceive and believe, it can achieve." },
-  hill2:       { who: "Napoleon Hill (Think and Grow Rich)", line: "Strength and growth come only through continuous effort and struggle." },
+  beck:        { who: "Aaron T. Beck (father of CBT)",     line: "Your thoughts are not facts. The way you interpret an event matters more than the event itself.", meaning: "This means your interpretation of events shapes your emotions more than the events themselves. By questioning your thoughts, you can change how you feel." },
+  ellis:       { who: "Albert Ellis (REBT)",                line: "It's not what happens to you, but how you react to it that matters.", meaning: "This means you have more control over your feelings than you think. Your reaction is something you can influence and adjust." },
+  burns:       { who: "David Burns (Feeling Good)",         line: "You feel the way you think. Change the thought, and the feeling will follow.", meaning: "This means emotions are not permanent. By shifting your thoughts, you can genuinely change your emotional state." },
+  dweck:       { who: "Carol S. Dweck (Mindset)",           line: "Becoming is better than being. The view you adopt for yourself profoundly affects how you live.", meaning: "This means growth is about the journey, not the destination. Believing you can improve makes real improvement possible." },
+  ikigai:      { who: "Ikigai (Garcia & Miralles)",         line: "Only staying active will make you want to live a hundred years. Find a reason to get out of bed in the morning.", meaning: "This means purpose and movement are interconnected. When you have reasons to move forward, life feels more meaningful." },
+  vivekananda: { who: "Swami Vivekananda",                  line: "Arise, awake, and stop not till the goal is reached.", meaning: "This means action and persistence create real change. Small steps forward, taken consistently, lead to transformation." },
+  vivekananda2:{ who: "Swami Vivekananda",                  line: "The greatest religion is to be true to your own nature. Have faith in yourselves.", meaning: "This means authenticity is strength. Trusting yourself and your instincts is one of the most powerful things you can do." },
+  mandela:     { who: "Nelson Mandela",                     line: "It always seems impossible until it's done.", meaning: "This means what feels impossible now often just needs one brave step. Many difficult things become possible once you start." },
+  mandela2:    { who: "Nelson Mandela",                     line: "The greatest glory in living lies not in never falling, but in rising every time we fall.", meaning: "This means resilience, not perfection, is the real achievement. Each time you recover, you become stronger." },
+  hill:        { who: "Napoleon Hill (Think and Grow Rich)", line: "Whatever the mind can conceive and believe, it can achieve.", meaning: "This means belief is the first step to achievement. Your inner conviction directly influences what becomes possible." },
+  hill2:       { who: "Napoleon Hill (Think and Grow Rich)", line: "Strength and growth come only through continuous effort and struggle.", meaning: "This means comfort doesn't build strength. The challenging moments are actually where real growth happens." },
+  kahneman:    { who: "Daniel Kahneman (Thinking, Fast and Slow)", line: "Nothing in life is as important as you think it is while you are thinking about it.", meaning: "This means emotions can distort your perspective temporarily. Taking time before deciding helps you see the true importance of things." },
+  seligman:    { who: "Martin Seligman (Learned Optimism)", line: "The defining characteristic of pessimists is that they tend to believe that bad events will last a long time, will undermine everything they do, and are their own fault.", meaning: "This means recognizing when you're thinking pessimistically is the first step to breaking that pattern. Your challenges are temporary and manageable." },
+  csikszentmihalyi: { who: "Mihaly Csikszentmihalyi (Flow)", line: "The best moments in our lives are not the passive, receptive, relaxing times... The best moments usually occur if a person's body or mind is stretched to its limits in a voluntary effort to accomplish something difficult and worthwhile.", meaning: "This means fulfillment comes from engaging with challenges that matter to you. Pushing yourself toward meaningful goals creates real joy." },
+  frankl:      { who: "Viktor Frankl (Man's Search for Meaning)", line: "What is to give light must endure burning.", meaning: "This means meaningful change requires effort and sometimes discomfort. But this 'burning' leads to something beautiful and lasting." },
+  frankl2:     { who: "Viktor Frankl (Man's Search for Meaning)", line: "Being human always points, and is directed, to something or someone, other than oneself - be it a meaning to fulfill or another human being to encounter. The more one forgets himself - by giving himself to a cause to serve or another person to love - the more human he is.", meaning: "This means connection and purpose beyond yourself are what make life meaningful. Loneliness often comes from focusing too much inward." },
+  linehan:     { who: "Marsha Linehan (DBT)", line: "The goal is to learn to observe your pain, without running from it or fighting it, and without becoming overwhelmed by it.", meaning: "This means pain doesn't need to control your actions. You can feel it, notice it, and still move forward with your values." },
+  kabat_zinn:  { who: "Jon Kabat-Zinn (Mindfulness)", line: "You can't stop the waves, but you can learn to surf.", meaning: "This means difficult emotions will come and go. Learning to work with them, rather than resist them, helps you stay steady." },
+  emmons:      { who: "Robert Emmons (Thanks!)", line: "Gratitude is a way of looking that turns whatever we have into enough.", meaning: "This means gratitude is a skill that genuinely shifts your perception. What you focus on grows, so noticing good things multiplies them." },
+  fredrickson: { who: "Barbara Fredrickson (Positivity)", line: "Love is our supreme emotion, the emotion that opens our hearts and our minds to the world around us.", meaning: "This means love (in all forms—compassion, kindness, connection) opens you to possibilities. It's the opposite of fear and closes the door." },
+  journal_anxiety: {
+    who: "Journal of Anxiety Disorders",
+    line: "Mindfulness-based interventions have shown consistent positive effects on anxiety reduction across multiple studies.",
+    meaning: "This means that simple present-moment practices can help quiet anxiety when it feels overwhelming.",
+  },
+  journal_depression: {
+    who: "American Journal of Psychiatry",
+    line: "Cognitive behavioral therapy demonstrates robust efficacy in treating depression, with effect sizes comparable to antidepressant medication.",
+    meaning: "This means changing the way you think about your feelings can actually improve your mood over time.",
+  },
+  journal_sleep: {
+    who: "Sleep Medicine Reviews",
+    line: "Regular physical activity is associated with improved sleep quality and reduced insomnia symptoms.",
+    meaning: "This means moving your body during the day can help your mind rest better at night.",
+  },
+  journal_resilience: {
+    who: "Journal of Positive Psychology",
+    line: "Resilience is not a fixed trait; it is a set of skills we can strengthen over time.",
+    meaning: "This means you can become stronger through practice, even after hard days.",
+  },
+  journal_connection: {
+    who: "Journal of Social and Clinical Psychology",
+    line: "Strong social ties are one of the most reliable predictors of well-being.",
+    meaning: "This means feeling supported by people around you really helps your mental health.",
+  },
+  journal_selfcompassion: {
+    who: "Self-Compassion Research",
+    line: "People who treat themselves with kindness have lower anxiety and better emotional recovery.",
+    meaning: "This means being gentle with yourself is not indulgence — it's healing.",
+  },
 };
 
 const wisdomLine = (key: keyof typeof WISDOM) => `\n\n💭 *"${WISDOM[key].line}"*\n— ${WISDOM[key].who}`;
+const wisdomNote = (key: keyof typeof WISDOM) => WISDOM[key].meaning ? `\n\n*Meaning:* ${WISDOM[key].meaning}` : "";
 
 const RANDOM_WISDOM_KEYS: (keyof typeof WISDOM)[] = [
-  "vivekananda", "mandela", "hill", "dweck", "ikigai", "beck", "burns", "ellis", "vivekananda2", "mandela2", "hill2"
+  "vivekananda", "mandela", "hill", "dweck", "ikigai", "beck", "burns", "ellis", "vivekananda2", "mandela2", "hill2",
+  "kahneman", "seligman", "csikszentmihalyi", "frankl", "frankl2", "linehan", "kabat_zinn", "emmons", "fredrickson",
+  "journal_anxiety", "journal_depression", "journal_sleep"
 ];
 const dailyWisdom = () => {
   const d = new Date();
@@ -88,15 +141,47 @@ const resolveRoute = (href: string): string => {
 function generateReply(input: string): Omit<Message, "id" | "from" | "time"> {
   const text = input.toLowerCase().trim();
 
-  // Greeting
-  if (/^(hi|hello|hey|hola|namaste|yo|sup|good (morning|afternoon|evening))/i.test(text)) {
+  // Specific user feeling responses
+  if (/(i am feeling low|i feel low|feeling low|feel low)/i.test(text)) {
+    return {
+      text: `I can feel how heavy this moment is, and I want you to know I’m here with you 💙 You are not alone in this world, and you never will be — your journey is simply different, and that’s okay.\n\nLet’s do something gentle together:\n• 💧 Drink a glass of water — it can help your body and your mood\n• 🧘‍♀️ Move in a simple way, even if it’s just stretching or a short walk\n• 📖 Read a calm page or write one kind thought in a journal\n\nIf you want, I can help you put this into words or create a tiny plan that feels safe and caring.`,
+      suggestions: [
+        { label: "Drink water reminder", href: "#water", icon: Droplets },
+        { label: "Gentle movement", href: "#wellness", icon: Activity },
+        { label: "Journal a thought", href: "#healing", icon: BookOpen },
+      ],
+      quickReplies: ["I need motivation", "Share how I feel", "Let's make a plan"],
+    };
+  }
+
+  if (/(i am feeling good|i feel good|feeling good|feel good)/i.test(text)) {
+    return {
+      text: `That is so lovely to hear! 🌟 Keep that warmth with you — you're doing well, and it truly matters. Remember, life is not over until you decide it is over. One day this will pass too, and that is okay.\n\nWould you like to capture this moment in a journal, build a gentle plan around it, or simply enjoy this calm energy for now?`,
+      suggestions: [
+        { label: "Today's Plan", href: "#dashboard", icon: Heart },
+        { label: "Journal this moment", href: "#healing", icon: FileText },
+        { label: "Keep this energy", href: "#journey", icon: Sun },
+      ],
+      quickReplies: ["Plan my day", "Write it down", "I feel grateful"],
+    };
+  }
+
+  if (/(hi.*how.*you|hello.*how.*you|who.*you|how.*you.*doing|what.*your name|what.*are you)/i.test(text)) {
+    return {
+      text: `Hey friend! 👋 I’m doing great and I’m perfectly fine, thank you for asking. I’m Lumi — your calm, caring companion here to listen, help you breathe, or make a gentle plan with you.\n\nWhat can I do for you today?`,
+      quickReplies: ["I'm feeling low", "I feel good", "Help me plan my day"],
+    };
+  }
+
+  // Greeting variations
+  if (/^(hi|hello|hey|hola|namaste|yo|sup|good (morning|afternoon|evening)|morning|afternoon|evening)/i.test(text)) {
     const { part } = fullTimeGreeting();
     return {
-      text: `Hey, good ${part} 💛 I'm Lumi.\n\nI actually want to know — what's the real answer to "how are you" today? Even "I don't know" is a fine place to start.\n\nIf you'd rather just *do* something kind for yourself, today's journey is waiting whenever you are.`,
+      text: `Hello there 💛 I'm Lumi, your gentle companion for wellness and self-care.\n\nI can sense there's more beneath the surface than just a greeting. How are you truly feeling today? I'm here to listen without judgment.\n\nIf you'd like, we can explore today's journey together — it's a simple way to nurture your well-being.`,
       suggestions: [
         { label: "Start today's journey", href: "#journey", icon: Sun },
       ],
-      quickReplies: ["I'm having a hard day", "I'm okay, just tired", "Honestly, I'm struggling", "I just want to talk"],
+      quickReplies: ["I'm feeling anxious", "I'm okay, just tired", "I need some motivation", "I want to talk about something"],
     };
   }
 
@@ -163,66 +248,125 @@ function generateReply(input: string): Omit<Message, "id" | "from" | "time"> {
     };
   }
 
-  // Depression / sadness
-  if (/(depress|sad|down|empty|hopeless|low|crying|alone|lonely|worthless|numb|miserable|hard day|struggling|not okay)/i.test(text)) {
+  // Expressing feeling down or struggling
+  if (/(depress|sad|down|empty|hopeless|low|crying|alone|lonely|worthless|numb|miserable|hard day|struggling|not okay|feeling (down|low|blue|depressed))/i.test(text)) {
     return {
-      text: `I'm really glad you said something — that takes more than people realise 💛\n\nWhat you're feeling is real. Sadness has weight, and you've been carrying it. You're not broken — you're tired. There's a difference.${wisdomLine("vivekananda")}\n\nFor today, can I suggest something small? Open Today's Plan and answer one mood question — it'll hand you a gentle day. That's the win.\n\n*If you're ever in crisis, please reach out to a local helpline. A real person will pick up.*`,
+      text: `I hear the weight in your words, and I'm truly sorry you're carrying this 💙 It's incredibly brave of you to reach out and acknowledge how you're feeling.\n\nYou're not alone in this moment. Depression can make everything feel heavy, hopeless, and overwhelming, but these feelings — though intense — are temporary.\n\n**What the research says:**${wisdomLine("journal_depression")}${wisdomNote("journal_depression")}\n\n**Why this matters for you right now:** This isn't just about \"thinking positive.\" It's about taking small, practical steps that gently shift your brain chemistry and perspective.\n\n**Start with one of these:**\n• Have a simple meal and drink a glass of water\n• Step outside for just 5 minutes — fresh air helps\n• Write down three small things that happened today (even tiny things count)\n• Lie down and breathe slowly for 2 minutes\n\nYou don't need to fix everything today. You just need to do one small thing.`,
       suggestions: [
-        { label: "Open Today's Plan", href: "#dashboard", icon: Heart },
-        { label: "Write one sentence", href: "#healing", icon: FileText },
-        { label: "Today's gentle journey", href: "#journey", icon: Sun },
+        { label: "Today's Plan (adjusted for low mood)", href: "#dashboard", icon: Heart },
+        { label: "Journal your feelings", href: "#healing", icon: FileText },
+        { label: "Gentle breathing", href: "#breathe", icon: Wind },
       ],
-      quickReplies: ["I feel so alone", "Why do I feel this way?", "Just sit with me"],
+      quickReplies: ["I feel so alone", "Why do I feel this way?", "Help me find one small step", "Just listen to me"],
     };
   }
 
-  // Anxiety
-  if (/(anxious|anxiety|worried|nervous|panic|overwhelm|racing thoughts|can.?t breathe|scared|on edge|chest tight)/i.test(text)) {
+  // Anxiety and panic
+  if (/(anxious|anxiety|worried|nervous|panic|overwhelm|racing thoughts|can.?t breathe|scared|on edge|chest tight|heart racing|butterflies|freaking out)/i.test(text)) {
     return {
-      text: `That racing-heart, can't-think-straight feeling — I know it 🌬️ You're safe in this moment, even if your body is sounding the alarm.\n\nLet's ground you. Name **5 things you can see**, **4 you can touch**, **3 you can hear**, **2 you can smell**, **1 you can taste**. It pulls your brain out of "what if" and back into "what is."${wisdomLine("burns")}\n\nWhen the wave eases, a thought record can untangle whatever your mind is yelling.`,
+      text: `I can feel the anxiety in your message — that tightness in your chest, the racing thoughts 🌬️ You're experiencing something very real, and it's okay to feel this way.\n\n**What's happening:** Anxiety is your nervous system in overdrive. The physical symptoms are real, but they're not dangerous.\n\n**Here's what research shows:**${wisdomLine("kabat_zinn")}${wisdomNote("kabat_zinn")}\n\nLet's ground ourselves together right now. Try this simple exercise:\n1. Name 5 things you can see around you\n2. Name 4 things you can touch\n3. Name 3 things you can hear\n4. Name 2 things you can smell\n5. Name 1 thing you can taste\n\nThis brings your awareness back to the present moment, and the anxiety often settles.`,
       suggestions: [
-        { label: "60-second breathing", href: "#breathe", icon: Wind },
-        { label: "Untangle the thought (CBT)", href: "#healing", icon: Brain },
+        { label: "Guided breathing exercise", href: "#breathe", icon: Wind },
+        { label: "Grounding plan for today", href: "#dashboard", icon: Heart },
+        { label: "Calm your mind with CBT", href: "#healing", icon: Brain },
+      ],
+      quickReplies: ["My chest feels tight", "I can't stop worrying", "Help me calm down right now", "I'm scared"],
+    };
+  }
+
+  // Anger and frustration
+  if (/(angry|anger|mad|frustrated|furious|rage|pissed|upset|annoyed|fed up|irritated|want to scream)/i.test(text)) {
+    return {
+      text: `Anger has a way of demanding our attention, doesn't it? 🔥 It's a powerful emotion that tells us something important needs our notice.\n\n**What anger is telling you:** Anger signals that a boundary has been crossed, something is unfair, or your needs aren't being met. It's valid, but acting on it when it's hot usually makes things worse.\n\n**Here's what helps:**${wisdomLine("linehan")}${wisdomNote("linehan")}\n\n**Your immediate reset:**\n1. Take a slow breath: inhale for 4, hold for 4, exhale for 6 — repeat 3 times\n2. Step away from the situation if you can — physical space helps\n3. Name what you're angry about in one sentence\n4. Ask: "What do I actually need right now?"\n5. Express it safely — write, move, or talk to someone you trust\n\nAnger is valid. Your response to it is what you can control.`,
+      suggestions: [
+        { label: "Reset breathing", href: "#breathe", icon: Wind },
+        { label: "Journal your anger", href: "#healing", icon: FileText },
+        { label: "Grounding movement", href: "#wellness", icon: Activity },
+      ],
+      quickReplies: ["I just want to vent", "I need to calm down", "This isn't fair", "Help me process this"],
+    };
+  }
+
+  // Stress and overwhelm
+  if (/(stress|overwhelmed|burnt? out|exhausted|too much|can.?t cope|pressure|swamped|drowning|overloaded)/i.test(text)) {
+    return {
+      text: `I can sense how heavy this feels — like the world is moving too fast and you're carrying too much 🌿 You're doing your best in challenging circumstances.\n\n**What's really happening:** Overwhelm happens when you're trying to hold too many things at once. Your brain literally can't process everything.\n\n**Here's what experts know:**${wisdomLine("csikszentmihalyi")}${wisdomNote("csikszentmihalyi")}\n\n**Your next step — pick just ONE:**\n1. Write down everything bouncing in your head (5 minutes)\n2. Pick the ONE thing that, if done, would make today feel manageable\n3. Do just that one thing\n4. Then rest — you've done enough\n\nProgress over perfection. Completion of one thing beats partial attempts at many things.`,
+      suggestions: [
+        { label: "Simplify today's plan", href: "#dashboard", icon: Heart },
+        { label: "Priority reset", href: "#todo", icon: CheckSquare },
+        { label: "Quick breathing break", href: "#breathe", icon: Wind },
+      ],
+      quickReplies: ["What should I focus on?", "I need permission to rest", "Help me pick one thing", "I can't slow down"],
+    };
+  }
+
+  // Sleep issues
+  if (/(sleep|insomnia|tired|can.?t sleep|exhaust|fatigue|nap|restless|wake up|bedtime)/i.test(text)) {
+    return {
+      text: `Sleep is the foundation of our mental and physical health, and when it's disrupted, everything feels harder 🌙 I hear how exhausting this must be.\n\n**Why sleep matters:** During sleep, your brain processes emotions, repairs itself, and consolidates memories. Without it, everything becomes harder.\n\n**What research shows:**${wisdomLine("journal_sleep")}${wisdomNote("journal_sleep")}\n\n**Your wind-down routine for tonight:**\n1. Stop screens 60 minutes before bed (blue light keeps you awake)\n2. Dim all lights — this signals your body to make melatonin\n3. Try warm milk, herbal tea, or just warm water\n4. Write down one thing you can let go of today\n5. Do 5 minutes of slow breathing: inhale for 4, exhale for 6\n6. Lie in bed without pressure to sleep — rest is enough\n\nConsistency matters more than forcing it. Your body will adjust.`,
+      suggestions: [
+        { label: "Bedtime routine plan", href: "#dashboard", icon: Heart },
+        { label: "Sleep-focused breathing", href: "#breathe", icon: Wind },
+        { label: "Evening journal", href: "#healing", icon: FileText },
+      ],
+      quickReplies: ["My mind won't quiet", "I wake up tired", "Help me wind down now", "Create a sleep schedule"],
+    };
+  }
+
+  // Reasons for feelings
+  if (/(reasons|why do i feel|why am i feeling|key reasons|what is causing|cause of|what makes me feel)/i.test(text)) {
+    return {
+      text: `Here are some clear key reasons your feelings may feel stronger today:
+
+1. Stress and overwhelm can activate your body's danger response, making emotions feel louder and more urgent.
+2. Poor sleep weakens emotional regulation, so even small moments can feel heavy.${wisdomLine("journal_sleep")}${wisdomNote("journal_sleep")}
+3. Feeling disconnected or unsupported can make sadness and anxiety stay longer.${wisdomLine("journal_connection")}${wisdomNote("journal_connection")}
+
+These are not signs of weakness. They are understandable reactions to what your mind and body are carrying.`,
+      suggestions: [
         { label: "Today's Plan", href: "#dashboard", icon: Heart },
+        { label: "Write your feelings", href: "#healing", icon: FileText },
       ],
-      quickReplies: ["My chest feels tight", "I keep overthinking", "What if it gets worse?"],
+      quickReplies: ["Why do I feel this way?", "Give me key reasons", "Help me feel calmer"],
     };
   }
 
-  // Anger
-  if (/(angry|anger|mad|frustrated|furious|rage|pissed|upset|annoyed|fed up)/i.test(text)) {
-    return {
-      text: `Yeah. Anger usually means a boundary got crossed, or someone wasn't heard 🔥 You don't have to "calm down" — you're allowed to be furious. Let's just keep you out of regret-territory.\n\nTry **STOP**: **S**top, **T**ake 3 slow breaths (longer out than in), **O**bserve where it sits in your body, **P**roceed when *you* choose to.${wisdomLine("ellis")}\n\nCold water on your face genuinely slows your heart rate. Or write what you wish you could say — without sending it.`,
-      suggestions: [
-        { label: "Cool-down breathing", href: "#breathe", icon: Wind },
-        { label: "Vent it on the page", href: "#healing", icon: FileText },
-      ],
-      quickReplies: ["I just want to vent", "Help me calm down", "What if I'm in the wrong?"],
-    };
-  }
+  // Point-by-point answers
+  if (/(point by point|step by step|pointwise|break it down|bullet points|list out|list the steps|list the reasons)/i.test(text)) {
+    if (/(sleep|insomnia|tired|bedtime|restless|wake up)/i.test(text)) {
+      return {
+        text: `Absolutely — here is a calm, step-by-step sleep guide:
 
-  // Stress
-  if (/(stress|overwhelmed|burnt? out|exhausted|too much|can.?t cope|pressure|swamped|drowning)/i.test(text)) {
+1. Turn off screens 60 minutes before bed.
+2. Dim the lights and keep the room cool.
+3. Write down one thing you are ready to release.
+4. Breathe slowly: 4 counts in, 6 counts out.
+5. Lie down and let your body soften.
+
+This is meant to be gentle, kind, and easy to follow.`,
+        suggestions: [
+          { label: "Bedtime routine plan", href: "#dashboard", icon: Heart },
+          { label: "Breathing reset", href: "#breathe", icon: Wind },
+        ],
+        quickReplies: ["Help me wind down", "I need a calm routine"],
+      };
+    }
+
     return {
-      text: `When everything feels like too much, the answer isn't "do more" — it's "do less, but actually do it" 🌿\n\nPick **one** thing for the next hour. Even if it's "drink water and sit down." Let the rest wait. Most things will.${wisdomLine("dweck")}\n\nFollow it with two minutes of slow breathing (longer exhales than inhales) and a 10-minute walk without your phone. That's it — that's the reset.`,
+      text: `Sure — I can answer this in a humble, point-by-point way:
+
+1. Notice what you are feeling right now.
+2. Choose the most important thing to address first.
+3. Take one very small step toward that thing.
+4. Be gentle with yourself if it feels slow.
+5. Return to these steps whenever you need a calm reset.
+
+If you want, I can make these steps specific to sleep, stress, or your daily plan.`,
       suggestions: [
         { label: "Today's Plan", href: "#dashboard", icon: Heart },
-        { label: "Breathing reset", href: "#breathe", icon: Wind },
-        { label: "Today's gentle journey", href: "#journey", icon: Sun },
+        { label: "Take a breath", href: "#breathe", icon: Wind },
       ],
-      quickReplies: ["What should I drop?", "I need permission to rest", "I can't slow down"],
-    };
-  }
-
-  // Sleep
-  if (/(sleep|insomnia|tired|can.?t sleep|exhaust|fatigue|nap)/i.test(text)) {
-    return {
-      text: `Sleep is the foundation everything rests on 🌙\n\nFor better rest tonight:\n• Stop screens 1 hour before bed (yes, really)\n• Dim lights after sunset — it cues melatonin\n• Keep your bedroom cool (~18°C / 65°F)\n• No caffeine after 2 PM\n• Try 4-7-8 breathing in bed: inhale 4, hold 7, exhale 8${wisdomLine("ikigai")}\n\nIf your mind is racing, write down 3 things on a notepad — "park" them outside your head. Today's Plan also has a personalised bedtime for tonight.`,
-      suggestions: [
-        { label: "Tonight's bedtime plan", href: "#dashboard", icon: Heart },
-        { label: "Bedtime Breathing", href: "#breathe", icon: Wind },
-      ],
-      quickReplies: ["Help me wind down", "Plan a restful evening"],
+      quickReplies: ["Give me the steps", "What should I do first?", "Make it gentle"],
     };
   }
 
@@ -248,16 +392,89 @@ function generateReply(input: string): Omit<Message, "id" | "from" | "time"> {
     };
   }
 
-  // Wisdom / motivation / inspiration / give up
-  if (/(motivat|inspir|quote|encourage|need.*push|give up|tired of trying|wisdom|words.*wisdom)/i.test(text)) {
-    const w = dailyWisdom();
+  // Motivation and inspiration
+  if (/(motivat|inspir|quote|encourage|need.*push|give up|tired of trying|wisdom|words.*wisdom|inspire me)/i.test(text)) {
     return {
-      text: `Here's a line worth holding today 🌟\n\n💭 *"${w.line}"*\n— ${w.who}${wisdomLine("mandela")}${wisdomLine("hill")}\n\nProgress isn't loud. It's choosing one good thing today, even when nothing feels possible. You're already doing it by being here.`,
+      text: `Seeking motivation is a strong step. Here's something that might resonate:\n\nHere is a useful idea from Carol Dweck:${wisdomLine("dweck")}${wisdomNote("dweck")}\n\nA helpful action is to choose one small thing you can do in the next 10 minutes. That is real progress.`,
       suggestions: [
-        { label: "Today's Plan — make it real", href: "#dashboard", icon: Heart },
-        { label: "5-step Journey", href: "#journey", icon: Sun },
+        { label: "Today's meaningful plan", href: "#dashboard", icon: Heart },
+        { label: "5-step journey", href: "#journey", icon: Sun },
       ],
-      quickReplies: ["Another quote", "I need a plan", "I feel stuck"],
+      quickReplies: ["Another quote please", "Help me find motivation", "I feel stuck", "What's my next step?"],
+    };
+  }
+
+  // Mood swings
+  if (/(mood swings?|moods swing|mood changing|mood up and down|emotional rollercoaster|emotion.*swing)/i.test(text)) {
+    return {
+      text: `Mood swings can feel confusing and unsettling, but they often mean your mind is responding to stress, sleep changes, or something important you haven't named yet. Notice what changed before the shift — that is the most useful clue.`,
+      quickReplies: ["Why does this happen?", "Help me steady my mood"],
+    };
+  }
+
+  // Fear
+  if (/(fear|afraid|scared|terrified|panic|fearful|phobia|worry.*a lot)/i.test(text)) {
+    return {
+      text: `Fear is a natural response when something feels unknown or unsafe. It is not a flaw — it is a message from your body. Naming the fear gently can help it feel less overwhelming.`,
+      quickReplies: ["How do I face this?", "How can I feel safer"],
+    };
+  }
+
+  // Failure
+  if (/(failure|failed|fail(ed)?|not good enough|lost hope|gave up|failure.*feels)/i.test(text)) {
+    return {
+      text: `Feeling like a failure is painful, but it is not the whole story. Most people who grow stronger have failed many times first. What matters more is whether you keep learning and keep moving forward, even gently.`,
+      quickReplies: ["How do I recover?", "What if I fail again"],
+    };
+  }
+
+  // Hard work and effort
+  if (/(hard work|work hard|hardworking|effort|struggle|persist|keep going|push through)/i.test(text)) {
+    return {
+      text: `Hard work matters, but so does rest. Progress usually comes from steady effort plus small breaks, not from pushing yourself until you burn out.`,
+      quickReplies: ["How do I keep going?", "Is this worth it"],
+    };
+  }
+
+  // Confidence
+  if (/(confidence|confident|self esteem|self-worth|self worth|self belief|believe in myself)/i.test(text)) {
+    return {
+      text: `Confidence grows from small wins and kind self-talk. It is not fixed — it is something you build one small step at a time.`,
+      quickReplies: ["How do I feel more confident?", "What should I try first"],
+    };
+  }
+
+  // Practice and consistency
+  if (/(practice|practicing|keep practicing|habit|routine|repeat|consistency|consistent)/i.test(text)) {
+    return {
+      text: `Practice creates change over time. Focus on one small, repeatable action today instead of trying to do everything at once. Consistency is more powerful than perfection.`,
+      quickReplies: ["What practice should I start?", "How do I stay consistent"],
+    };
+  }
+
+  // Loneliness and isolation
+  if (/(alone|lonely|isolated|no one|nobody|disconnect|missing someone|feel isolated)/i.test(text)) {
+    return {
+      text: `Feeling lonely touches something deep in all of us 💙 Even in a crowded world, we can feel profoundly alone. You're not invisible — I see you reaching out right now.\n\n**What loneliness really is:** Loneliness is the gap between the connection you want and the connection you have. It's not about being physically alone; it's about feeling disconnected.\n\n**Here's what matters:**${wisdomLine("frankl2")}${wisdomNote("frankl2")}\n\n**What you can do now:**\n• Text one person — even just saying "thinking of you" counts\n• Spend 5 minutes in a space with other people (coffee shop, park, library)\n• Write down three people who have been kind to you — feel that kindness\n• Do something meaningful for someone else — connection flows both ways\n\nConnection starts with one small gesture. You don't need to fix everything — just reach out.`,
+      suggestions: [
+        { label: "Journal about connection", href: "#healing", icon: FileText },
+        { label: "Today's plan (with movement)", href: "#dashboard", icon: Heart },
+        { label: "Soothing breathing", href: "#breathe", icon: Wind },
+      ],
+      quickReplies: ["I miss having someone to talk to", "How can I feel less alone?", "Tell me I'm not alone", "How do I connect"],
+    };
+  }
+
+  // Self-doubt and low confidence
+  if (/(not good enough|worthless|failure|stupid|dumb|can.?t do it|imposter|doubt myself|not capable)/i.test(text)) {
+    return {
+      text: `Those critical voices in our heads can be so loud and convincing, can't they? 💭 But they're not telling the truth about who you are.\n\n**What's happening:** These are automatic negative thoughts — your brain's protective mechanism, but it's being overprotective.\n\n**Here's what research shows:**${wisdomLine("dweck")}${wisdomNote("dweck")}\n\nEvery person who has achieved something meaningful has faced self-doubt. It's not a sign of weakness — it's actually a sign you're challenging yourself and growing.\n\n**Right now:**\n1. Notice the critical thought: "I can't do this" or "I'm not good enough"\n2. Ask: Is this actually true, or is it my anxiety talking?\n3. Find one piece of evidence that contradicts this thought\n4. Remember one time you did something hard — you have proof you can do difficult things\n\nGrowth happens at the edge of your comfort zone. You're supposed to feel uncertain when you're learning.`,
+      suggestions: [
+        { label: "Challenge this thought (CBT)", href: "#healing", icon: Brain },
+        { label: "Find your strengths", href: "#wellness", icon: Heart },
+        { label: "Start one small thing", href: "#dashboard", icon: CheckSquare },
+      ],
+      quickReplies: ["I'm not capable", "I always fail anyway", "I'm not worthy", "Help me find one strength"],
     };
   }
 
@@ -275,7 +492,7 @@ function generateReply(input: string): Omit<Message, "id" | "from" | "time"> {
   // Wisdom from books
   if (/(book|read|reading|library|ikigai|mindset|dweck|vivekananda|mandela|napoleon hill|think.*grow.*rich)/i.test(text)) {
     return {
-      text: `Some lines worth carrying with you today 📚${wisdomLine("ikigai")}${wisdomLine("dweck")}${wisdomLine("vivekananda")}${wisdomLine("hill")}${wisdomLine("mandela")}\n\nIf you'd like, I can fold one of these into a real day for you — Today's Plan turns the wisdom into meals, movement, and rest.`,
+      text: `Here is one idea that is meant to feel calm and useful.${wisdomLine("ikigai")}${wisdomNote("ikigai")}\n\nIf you'd like, I can share one more idea that fits how you are feeling right now.`,
       suggestions: [
         { label: "Open Today's Plan", href: "#dashboard", icon: Heart },
         { label: "5-step Journey", href: "#journey", icon: Sun },
@@ -327,6 +544,29 @@ function generateReply(input: string): Omit<Message, "id" | "from" | "time"> {
     };
   }
 
+  // Confusion or not understanding
+  if (/(confus|don.?t understand|lost|not sure|unclear|what.*mean|explain|help.*understand)/i.test(text)) {
+    return {
+      text: `I completely understand — sometimes things can feel overwhelming or unclear, and that's perfectly okay 🌟 You're not expected to have all the answers right now.\n\nLet's take this one step at a time. What specifically feels confusing? I'm here to explain things in simpler terms and help you find your way forward. No judgment, just gentle guidance.`,
+      suggestions: [
+        { label: "Today's Plan", href: "#dashboard", icon: Heart },
+        { label: "Start Simple", href: "#journey", icon: Sun },
+      ],
+      quickReplies: ["Explain the basics", "I need motivation", "Let's start small"],
+    };
+  }
+
+  // Finance / money management
+  if (/(money|budget|bills|financ|spend|save|debt|paycheck|income|rent|expense)/i.test(text)) {
+    return {
+      text: `A reset plan should include financial calm too. Start with one practical move: write down your essential spending, protect your basic needs, and choose one small habit that helps you feel more in control. It's not about perfect finances, it's about clear, steady progress.`,
+      suggestions: [
+        { label: "Reset my focus", href: "#dashboard", icon: LineIcon },
+      ],
+      quickReplies: ["How can I budget calmly?", "What should I save for first?"],
+    };
+  }
+
   // Help / capabilities
   if (/(help|what.*you.*do|what.*can.*you|features|how.*work)/i.test(text)) {
     return {
@@ -363,12 +603,13 @@ function generateReply(input: string): Omit<Message, "id" | "from" | "time"> {
   // Fallback — still offer wisdom + tools
   const w = dailyWisdom();
   return {
-    text: `I hear you 🌱 I'm still learning, but I'm best at helping with feelings, daily planning, and finding the right tool here for you.\n\n💭 *"${w.line}"*\n— ${w.who}\n\nTry one of these:`,
+    text: `I hear the essence of what you're sharing, and I want to support you in the best way I can 💙 I keep my guidance grounded and practical. If I’m uncertain about the exact next step, I’ll say so honestly, and then we can choose the clearest action together.\n\nHere's a thought that might resonate: 💭 *"${w.line}"*\n— ${w.who}\n\nWhat aspect of your well-being would you like to focus on today?`,
     suggestions: [
       { label: "Today's Plan", href: "#dashboard", icon: Heart },
       { label: "Today's Journey", href: "#journey", icon: Sun },
+      { label: "Express your feelings", href: "#healing", icon: FileText },
     ],
-    quickReplies: ["I'm feeling down", "Plan my day", "Share more wisdom"],
+    quickReplies: ["I'm feeling anxious", "I need motivation", "Help me plan my day", "I want to talk"],
   };
 }
 
@@ -389,7 +630,7 @@ export function Chatbot() {
       setMessages([{
         id: 1,
         from: "bot",
-        text: `Hey, good ${part} 💛 I'm **Lumi**.\n\nI'm not pretending to be a therapist — but I'll listen properly. We can sit with whatever's on your mind, or I can point you somewhere gentle: today's journey, a breathing pause, or a quiet journal page.\n\nNo rush. What's the real answer to "how are you" today?`,
+        text: `Good ${part} 💛 I'm **Lumi**, your gentle companion for wellness and self-care.\n\nI'm here to listen with compassion and understanding, not as a replacement for professional help. Whether you need to talk about what's weighing on your heart, explore some calming practices, or create a nurturing plan for your day — I'm here for you.\n\nHow are you feeling right now? There's no pressure to share everything at once.`,
         suggestions: [
           { label: "Start today's journey", href: "#journey", icon: Sun },
         ],
@@ -421,7 +662,7 @@ export function Chatbot() {
     setTyping(true);
 
     setTimeout(() => {
-      const reply = generateReply(text);
+      const reply = applyBehaviorLayer(generateReply(text));
       const botMsg: Message = {
         id: Date.now() + 1,
         from: "bot",

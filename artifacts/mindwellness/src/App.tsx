@@ -15,6 +15,7 @@ import HealingPage from "@/pages/HealingPage";
 import JourneyPage from "@/pages/JourneyPage";
 import DashboardPage from "@/pages/DashboardPage";
 import BooksPage from "@/pages/BooksPage";
+import ResetPlanPage from "@/pages/ResetPlanPage";
 import NotFound from "@/pages/not-found";
 import { Protected } from "@/components/auth/Protected";
 
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/diet">{() => <Protected><DietPage /></Protected>}</Route>
       <Route path="/todo">{() => <Protected><TodoPage /></Protected>}</Route>
       <Route path="/books">{() => <Protected><BooksPage /></Protected>}</Route>
+      <Route path="/reset-plan">{() => <Protected><ResetPlanPage /></Protected>}</Route>
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/forgot-password" component={ForgotPassword} />
