@@ -1,11 +1,22 @@
 import "dotenv/config";
 import app from "./app.js";
 
-const port = Number(process.env["PORT"] || 5175);
+const rawPort = process.env.PORT;
+const port = rawPort ? Number(rawPort) : 5175;
+const host = process.env.HOST || "0.0.0.0";
 const jsonDbPath = process.env.JSON_DB_PATH || "./data/db.json";
 const frontendUrl = process.env.FRONTEND_URL || "not configured";
 
+if (rawPort !== undefined && Number.isNaN(port)) {
+  console.error(`Invalid PORT value: ${rawPort}. PORT must be a valid number.`);
+  process.exit(1);
+}
+
 if (process.env.NODE_ENV === "production") {
+  if (!rawPort) {
+    console.error("Render requires PORT to be set. Please configure the PORT environment variable for the service.");
+    process.exit(1);
+  }
   if (!process.env.JSON_DB_PATH) {
     console.warn(
       "WARNING: JSON_DB_PATH is not configured. Render filesystem is ephemeral unless you mount persistent storage. " +
@@ -19,10 +30,10 @@ if (process.env.NODE_ENV === "production") {
   }
 }
 
-const server = app.listen(port);
+const server = app.listen(port, host);
 
 server.on('listening', () => {
-  console.log(`Server listening on port ${port}`);
+  console.log(`Server listening on ${host}:${port}`);
   console.log(`Frontend origin: ${frontendUrl}`);
   console.log(`JSON DB path: ${jsonDbPath}`);
 });

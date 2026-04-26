@@ -5,6 +5,10 @@ import router from "./routes";
 
 const app: Express = express();
 
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_ALT,
@@ -27,10 +31,19 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  const message = "SESSION_SECRET is required for secure session cookies.";
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(`${message} Set SESSION_SECRET in Render environment settings.`);
+  }
+  console.warn(`${message} Falling back to an insecure development secret.`);
+}
+
 // Session middleware
 app.use(session({
   name: "mw.sid",
-  secret: process.env.SESSION_SECRET !,
+  secret: sessionSecret || "dev-session-secret",
   resave: false,
   saveUninitialized: false,
   cookie: {
