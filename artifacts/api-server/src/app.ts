@@ -10,9 +10,6 @@ const allowedOrigins = [
   process.env.FRONTEND_URL_ALT,
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "http://localhost:4173",
-  "http://127.0.0.1:4173",
-  "https://mindnwellness-weblove-qc2qvsbyp-samrattiwari038-8580s-projects,vercel.app",
 ].filter(Boolean) as string[];
 
 // CORS — allow credentials for session cookies
@@ -33,7 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 // Session middleware
 app.use(session({
   name: "mw.sid",
-  secret: process.env.SESSION_SECRET || "mindwellness-secret-key-change-in-prod",
+  secret: process.env.SESSION_SECRET !,
   resave: false,
   saveUninitialized: false,
   cookie: {
