@@ -1,6 +1,16 @@
 import "dotenv/config";
 import app from "./app.js";
 
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
+  process.exit(1);
+});
+
 const rawPort = process.env.PORT;
 const port = rawPort ? Number(rawPort) : 5175;
 const host = process.env.HOST || "0.0.0.0";

@@ -31,19 +31,18 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const sessionSecret = process.env.SESSION_SECRET;
-if (!sessionSecret) {
-  const message = "SESSION_SECRET is required for secure session cookies.";
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(`${message} Set SESSION_SECRET in Render environment settings.`);
-  }
-  console.warn(`${message} Falling back to an insecure development secret.`);
+const sessionSecret = process.env.SESSION_SECRET || "dev-session-secret";
+if (!process.env.SESSION_SECRET) {
+  console.warn(
+    "WARNING: SESSION_SECRET is not set. The server will still start, but this is insecure for production. " +
+    "Set SESSION_SECRET in Render environment variables to protect user sessions."
+  );
 }
 
 // Session middleware
 app.use(session({
   name: "mw.sid",
-  secret: sessionSecret || "dev-session-secret",
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
