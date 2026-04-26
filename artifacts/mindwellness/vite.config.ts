@@ -10,7 +10,7 @@ const port = Number(process.env.PORT ?? 5173);
 const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -32,12 +32,6 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
     strictPort: true,
-    proxy: {
-      "/api": {
-        target: "http://localhost:5002",
-        changeOrigin: true,
-      },
-    },
     fs: {
       strict: true,
       deny: ["**/.*"],

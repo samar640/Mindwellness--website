@@ -17,6 +17,12 @@
       "email": "flow@example.com",
       "passwordHash": "$2b$12$ICoZvahHSRfx3uKnm0bTG.55YbEo7zJRWW/FrD9Ej8Ib.IVKgdt7S",
       "createdAt": 1777051314736
+    },
+    {
+      "id": "777ec35d-cd29-4eda-828d-365529977bfc",
+      "email": "samrattiwari236@gmail.com",
+      "passwordHash": "$2b$12$9yRYf4DpsVDwxfSbF2qZFejQezAjT1x0XgCBydOw.none/RNDAkjm",
+      "createdAt": 1777195403386
     }
   ]
 }
