@@ -10,7 +10,7 @@ const port = Number(process.env.PORT ?? 5173);
 const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
-  base: basePath,
+  base: './',
   plugins: [
     react(),
     tailwindcss(),
@@ -24,7 +24,7 @@ export default defineConfig({
   },
   root: projectRoot,
   build: {
-    outDir: path.resolve(projectRoot, "dist/public"),
+    outDir: path.resolve(projectRoot, "dist"),
     emptyOutDir: true,
   },
   server: {
