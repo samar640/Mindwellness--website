@@ -10,6 +10,7 @@ const allowedOrigins = [
     "http://127.0.0.1:5173",
     "http://localhost:4173",
     "http://127.0.0.1:4173",
+    "https://mindwellness-weblove-hw53q9830-samrattiwari038-8580s-projects.vercel.app",
 ].filter(Boolean);
 // CORS — allow credentials for session cookies
 app.use(cors({
