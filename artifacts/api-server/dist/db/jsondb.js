@@ -1,9 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { randomUUID } from "node:crypto";
+import { fileURLToPath } from "node:url";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const defaultDb = { users: [] };
 function resolveDbPath() {
-    const p = process.env["JSON_DB_PATH"] || "./data/db.json";
+    const p = process.env["JSON_DB_PATH"] || path.join(__dirname, "../data/db.json");
     return path.isAbsolute(p) ? p : path.resolve(process.cwd(), p);
 }
 function ensureDbFile(dbPath) {

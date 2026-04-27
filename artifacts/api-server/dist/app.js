@@ -1,16 +1,16 @@
 import express from "express";
 import cors from "cors";
 import session from "express-session";
-import router from "./routes";
+import router from "./routes/index.js";
 const app = express();
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
 const allowedOrigins = [
     process.env.FRONTEND_URL,
     process.env.FRONTEND_URL_ALT,
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://localhost:4173",
-    "http://127.0.0.1:4173",
-    "https://mindwellness-weblove-hw53q9830-samrattiwari038-8580s-projects.vercel.app",
 ].filter(Boolean);
 // CORS — allow credentials for session cookies
 app.use(cors({
@@ -25,10 +25,15 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const sessionSecret = process.env.SESSION_SECRET || "dev-session-secret";
+if (!process.env.SESSION_SECRET) {
+    console.warn("WARNING: SESSION_SECRET is not set. The server will still start, but this is insecure for production. " +
+        "Set SESSION_SECRET in Render environment variables to protect user sessions.");
+}
 // Session middleware
 app.use(session({
     name: "mw.sid",
-    secret: process.env.SESSION_SECRET || "mindwellness-secret-key-change-in-prod",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {

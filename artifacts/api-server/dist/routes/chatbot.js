@@ -47,6 +47,8 @@ const ChatResponseSchema = z.object({
     })).optional(),
     quickReplies: z.array(z.string()).optional(),
     emotionalInsight: z.string().optional(),
+    emotionalStates: z.array(z.string()).optional(),
+    rootProblems: z.array(z.string()).optional(),
     followUpQuestions: z.array(z.string()).optional(),
 });
 // Wisdom and knowledge base
@@ -138,6 +140,96 @@ const EMOTIONAL_PATTERNS = {
             "You deserve to feel seen and heard. Start by seeing and hearing yourself.",
         ],
     },
+    confusion: {
+        indicators: ["confused", "unclear", "lost", "stuck", "don't know", "not sure", "overwhelmed by choices"],
+        validations: [
+            "Confusion often shows up when you're trying to navigate a complex or uncertain moment.",
+            "It's okay to not have every answer right now.",
+            "Feeling stuck is a common sign that you're ready for the next step, even if it's not obvious yet.",
+            "You don't need clarity immediately—just one small move forward.",
+        ],
+        closings: [
+            "Give yourself permission to take the next small step, even if the full path isn't clear yet.",
+            "Clarity often comes after action, not before it.",
+            "This moment of confusion can become a turning point if you stay curious.",
+            "Trust that the direction will emerge as you keep exploring.",
+        ],
+    },
+    overthinking: {
+        indicators: ["overthinking", "racing thoughts", "mind won't rest", "can't stop thinking", "analysis paralysis", "looping thoughts"],
+        validations: [
+            "Overthinking can feel like your mind is stuck on repeat.",
+            "Your brain is trying to protect you by rehearsing possibilities.",
+            "It's normal to get trapped in thought loops when something matters deeply.",
+            "Your effort to understand the situation is real, even if it becomes tiring.",
+        ],
+        closings: [
+            "Sometimes the kindest thing is to step away from the loop and breathe.",
+            "You don't have to solve everything in your head right now.",
+            "A small action can be more helpful than another replay of the same thoughts.",
+            "Your clarity will return when you give your mind some space.",
+        ],
+    },
+    burnout: {
+        indicators: ["burnout", "burned out", "tired of trying", "drained", "exhausted", "empty", "no energy"],
+        validations: [
+            "Burnout is a signal that your limits have been stretched too far.",
+            "It's not weakness to feel exhausted—it's a sign that you need rest.",
+            "You deserve a pause, not more pressure.",
+            "Your efforts matter, and your energy deserves protection.",
+        ],
+        closings: [
+            "Rest is part of the work. Protect your energy before pushing harder.",
+            "This feeling is a sign to rebuild your foundation, not to ignore it.",
+            "Start with one small boundary that gives you space to breathe.",
+            "You can recover from burnout with steady, compassionate choices.",
+        ],
+    },
+    self_doubt: {
+        indicators: ["self doubt", "not confident", "can't do this", "imposter", "unworthy", "not enough", "doubt myself"],
+        validations: [
+            "Self-doubt is a normal part of growth and change.",
+            "Your mind is asking for proof that you belong, even when you already do.",
+            "Doubt doesn't erase your abilities or worth.",
+            "It can help to notice the difference between how you feel and what you've already accomplished.",
+        ],
+        closings: [
+            "Your doubts are understandable, but they don't define what's possible for you.",
+            "Take one brave step, even if you don't feel completely sure yet.",
+            "Your courage is shown in continuing to move forward despite doubt.",
+            "Treat yourself with the same kindness you'd offer a friend feeling unsure.",
+        ],
+    },
+    business_stress: {
+        indicators: ["business", "startup", "entrepreneur", "launch", "company", "investors", "sales", "revenue"],
+        validations: [
+            "Running or starting a business can feel overwhelming and high-stakes.",
+            "Your stress is understandable when so much depends on your decisions.",
+            "It's normal to feel pressure when you're building something important.",
+            "This is a big challenge, and you're right to take it seriously.",
+        ],
+        closings: [
+            "Lean into small experiments first, rather than trying to solve everything at once.",
+            "A simple business choice can still lead to meaningful progress.",
+            "Your business goals are valid, even if the path is still taking shape.",
+            "Stay close to what you can control and let the rest unfold step by step.",
+        ],
+    },
+    financial_fear: {
+        indicators: ["money", "debt", "budget", "broke", "can't afford", "expenses", "financial fear", "no money"],
+        validations: [
+            "Money worries are deeply stressful and very common.",
+            "Your fear is a response to real uncertainty, not a personal failure.",
+            "It's okay to feel anxious when resources feel tight.",
+            "This is a valid concern, and it deserves a practical response.",
+        ],
+        closings: [
+            "Take one practical step to ease the pressure and build some breathing room.",
+            "Small financial moves can add up faster than you expect.",
+            "Focus on stability first, then expand from there.",
+            "Your financial fears are understandable, and you can begin to address them.",
+        ],
+    },
     fear: {
         indicators: ["fear", "afraid", "scared", "terrified", "frightened", "phobic", "dread", "panic"],
         validations: [
@@ -169,6 +261,39 @@ const EMOTIONAL_PATTERNS = {
         ],
     },
 };
+const ROOT_PROBLEM_PATTERNS = {
+    social_connection: ["alone", "lonely", "isolated", "left out", "nobody", "friendless"],
+    life_purpose: ["purpose", "meaning", "direction", "lost", "why am i here", "what am i doing"],
+    self_worth: ["worthless", "not good enough", "failure", "shame", "unworthy", "deserve"],
+    overthinking: ["overthinking", "can't stop thinking", "racing thoughts", "mind won't rest", "analyze everything"],
+    burnout: ["burnout", "exhausted", "tired of trying", "drained", "no energy", "empty"],
+    business_stress: ["business", "startup", "entrepreneur", "company", "launch", "product", "service business"],
+    financial_fear: ["money", "budget", "debt", "financial", "broke", "can't afford", "no money", "expenses"],
+    fear_of_failure: ["afraid to fail", "fear of failure", "scared to fail", "don't want to fail", "failure"],
+    family_pressure: ["family pressure", "parents", "must", "expectations", "family wants", "family says"],
+    no_clarity: ["no clarity", "unclear", "don't know", "confused", "not sure", "lost"],
+    no_skill_confidence: ["not skilled", "can't do it", "not confident", "don't know how", "no skill", "inexperienced"],
+};
+const BUSINESS_DECISION_RULES = [
+    {
+        conditions: (message) => /\bbusiness\b|\bstartup\b|\bentrepreneur\b|\bstart.*business\b/i.test(message),
+        constraints: (message) => ({
+            lowBudget: /\b(no money|low budget|small budget|broke|can't afford|limited funds)\b/i.test(message),
+            student: /\bstudent\b|\bcollege\b|\bschool\b/i.test(message),
+            smallCity: /\bsmall city\b|\bsmall town\b|\bcollege town\b|\bremote area\b/i.test(message),
+            fearOfFailure: /\bfear.*failure\b|\bafraid.*fail\b|\bdon't want to fail\b/i.test(message),
+        }),
+        recommendation: "A service-oriented business or freelancing path is wiser right now than chasing a high-growth startup.",
+    },
+    {
+        conditions: (message) => /\bfinance\b|\bmoney\b|\bdebt\b|\bbudget\b|\bincome\b/i.test(message),
+        constraints: (message) => ({
+            urgent: /\b(bill|rent|loan|payment|deadline)\b/i.test(message),
+            lowConfidence: /\b(not sure|doubt|can't|don't know)\b/i.test(message),
+        }),
+        recommendation: "Focus on stabilizing your cash flow with small, reliable actions before taking on bigger risks.",
+    },
+];
 // Advanced response generation system
 class LumiResponseGenerator {
     context;
@@ -178,57 +303,98 @@ class LumiResponseGenerator {
         this.sessionId = sessionId;
     }
     // Step 1: Understand emotional state
-    analyzeEmotionalState(message) {
+    analyzeEmotionalStates(message) {
         const lowerMessage = message.toLowerCase();
+        const detected = new Set();
         for (const [emotion, pattern] of Object.entries(EMOTIONAL_PATTERNS)) {
             if (pattern.indicators.some(indicator => lowerMessage.includes(indicator))) {
-                return emotion;
+                detected.add(emotion);
             }
         }
-        // Detect complex emotions
-        if (lowerMessage.includes("stuck") && lowerMessage.includes("change")) {
-            return "confusion_transition";
+        if (lowerMessage.includes("tired of trying") || lowerMessage.includes("burnout") || lowerMessage.includes("burned out")) {
+            detected.add("burnout");
         }
-        if (lowerMessage.includes("tired") && lowerMessage.includes("everything")) {
-            return "existential_fatigue";
+        if (/\bcan't stop thinking\b|\boverthinking\b|\bbrain won't stop\b|\bracing thoughts\b/.test(lowerMessage)) {
+            detected.add("overthinking");
         }
-        return "neutral";
+        if (/\bself doubt\b|\bimposter\b|\bnot confident\b|\bdon't trust myself\b|\bnot enough\b/.test(lowerMessage)) {
+            detected.add("self_doubt");
+        }
+        if (/\bbusiness\b|\bstartup\b|\bentrepreneur\b|\blaunch\b/.test(lowerMessage)) {
+            detected.add("business_stress");
+        }
+        if (/\bmoney\b|\bdebt\b|\bbudget\b|\bbroke\b|\bcan't afford\b|\bfinancial\b/.test(lowerMessage)) {
+            detected.add("financial_fear");
+        }
+        if (/\bstuck\b|\bconfused\b|\bnot sure\b|\bno clarity\b|\buncertain\b/.test(lowerMessage)) {
+            detected.add("confusion");
+        }
+        if (detected.size === 0) {
+            return ["neutral"];
+        }
+        return Array.from(detected);
     }
     // Step 2: Identify root problem
-    identifyRootProblem(message, emotionalState) {
-        const problems = [];
+    identifyRootProblems(message, emotionalStates) {
+        const problems = new Set();
         const lowerMessage = message.toLowerCase();
-        if (emotionalState === "sadness" || emotionalState === "loneliness") {
-            if (lowerMessage.includes("alone") || lowerMessage.includes("lonely") || lowerMessage.includes("isolated")) {
-                problems.push("social_connection");
-            }
-            if (lowerMessage.includes("purpose") || lowerMessage.includes("meaning") || lowerMessage.includes("direction")) {
-                problems.push("life_purpose");
-            }
-            if (lowerMessage.includes("fail") || lowerMessage.includes("worthless") || lowerMessage.includes("not good enough")) {
-                problems.push("self_worth");
+        for (const [problem, indicators] of Object.entries(ROOT_PROBLEM_PATTERNS)) {
+            if (indicators.some(indicator => lowerMessage.includes(indicator))) {
+                problems.add(problem);
             }
         }
-        if (emotionalState === "anxiety" || emotionalState === "fear") {
-            if (lowerMessage.includes("future") || lowerMessage.includes("what if") || lowerMessage.includes("uncertain")) {
-                problems.push("future_uncertainty");
-            }
-            if (lowerMessage.includes("work") || lowerMessage.includes("job") || lowerMessage.includes("career")) {
-                problems.push("career_pressure");
-            }
-            if (lowerMessage.includes("health") || lowerMessage.includes("sick") || lowerMessage.includes("illness")) {
-                problems.push("health_concerns");
+        if (emotionalStates.includes("burnout")) {
+            problems.add("burnout");
+        }
+        if (emotionalStates.includes("overthinking")) {
+            problems.add("overthinking");
+        }
+        if (emotionalStates.includes("self_doubt")) {
+            problems.add("self_worth");
+        }
+        if (lowerMessage.includes("start a business") || lowerMessage.includes("want to start business") || lowerMessage.includes("want to start a business")) {
+            problems.add("business_idea");
+        }
+        if (lowerMessage.includes("student") && lowerMessage.includes("business")) {
+            problems.add("student_business");
+        }
+        if (problems.size === 0) {
+            problems.add("general_support");
+        }
+        return Array.from(problems);
+    }
+    determineDecisionStrategy(message, rootProblems) {
+        for (const rule of BUSINESS_DECISION_RULES) {
+            if (rule.conditions(message)) {
+                const advice = rule.recommendation;
+                if (rootProblems.includes("business_idea") || rootProblems.includes("business_stress") || rootProblems.includes("student_business")) {
+                    return advice;
+                }
             }
         }
-        if (emotionalState === "anger") {
-            if (lowerMessage.includes("unfair") || lowerMessage.includes("injustice") || lowerMessage.includes("wronged")) {
-                problems.push("perceived_injustice");
+        return null;
+    }
+    registerPatternInContext(rootProblems, emotionalStates) {
+        const repeated = [];
+        for (const problem of rootProblems) {
+            if (this.context.emotionalPatterns.recurringStruggles.includes(problem)) {
+                repeated.push(problem);
             }
-            if (lowerMessage.includes("relationship") || lowerMessage.includes("partner") || lowerMessage.includes("friend")) {
-                problems.push("relationship_issues");
+            else {
+                this.context.emotionalPatterns.recurringStruggles.push(problem);
             }
         }
-        return problems.length > 0 ? problems : ["general_support"];
+        for (const emotion of emotionalStates) {
+            if (this.context.emotionalPatterns.dominantEmotions.includes(emotion)) {
+                if (!this.context.emotionalPatterns.repeatedPatterns.includes(emotion)) {
+                    this.context.emotionalPatterns.repeatedPatterns.push(emotion);
+                }
+            }
+        }
+        if (repeated.length > 0) {
+            return `I notice this has come up before: ${repeated.join(", ")}. Let's address it with a clearer focus this time.`;
+        }
+        return null;
     }
     // Step 3: Validate feelings with variety
     validateFeelings(emotionalState) {
@@ -281,6 +447,46 @@ class LumiResponseGenerator {
                 "Set a boundary that protects your well-being",
                 "Consider what you need from this relationship moving forward",
             ],
+            burnout: [
+                "Take a 15-minute break and write down one thing you can say no to this week",
+                "Identify one task that can wait and give yourself permission to let it go",
+                "Notice one moment today where your energy feels lower and honor it with rest",
+            ],
+            overthinking: [
+                "Set a 5-minute timer and write down the thought loop, then close the notebook",
+                "Move your body for a short walk to shift your mind out of the loop",
+                "Ask yourself: what would I do if I trusted myself more in this moment?",
+            ],
+            business_idea: [
+                "Write one clear goal for your next week instead of trying to solve the whole business",
+                "Identify a small, low-cost test you can run to learn what customers want",
+                "List one strength you already have that could become a simple service offering",
+            ],
+            business_stress: [
+                "Name one business pressure and one small action to reduce it today",
+                "Focus on what you can control instead of everything that feels uncertain",
+                "Talk through one idea with a trusted friend or mentor, even if it's not perfect",
+            ],
+            financial_fear: [
+                "Write down your three most urgent expenses and one step to address each",
+                "Look for one small way to save or earn a little extra this week",
+                "Separate facts from fears by checking the actual numbers once",
+            ],
+            family_pressure: [
+                "Write down what you want, then decide what you're willing to say no to",
+                "Practice one calm sentence that explains your priority to your family",
+                "Set one small boundary that protects your mental space",
+            ],
+            no_clarity: [
+                "Choose one small next step, even if it's not the perfect one",
+                "Write down what you know and what you still need to learn",
+                "Ask yourself: what is one thing I can test right now?",
+            ],
+            no_skill_confidence: [
+                "Identify one skill you could improve with a single short practice session",
+                "Find one helpful resource or mentor for the area you feel unsure about",
+                "Remember one time you learned something new and how you did it",
+            ],
             general_support: [
                 "Take three slow breaths, noticing the sensation of air entering and leaving your body",
                 "Write down one thing you're grateful for, no matter how small",
@@ -310,6 +516,14 @@ class LumiResponseGenerator {
             health_concerns: "Taking charge of your health involves both prevention and early intervention. Build healthy habits gradually and stay informed about your health needs.",
             perceived_injustice: "Addressing injustice requires both inner work and outer action. Focus on what you can influence while protecting your peace of mind.",
             relationship_issues: "Healthy relationships require clear communication and boundaries. Consider what you need and how to express it effectively.",
+            burnout: "Recovery from burnout is about rebuilding rest, boundaries, and a sustainable pace. Start by scheduling regular breaks and reducing one source of pressure.",
+            overthinking: "Overthinking loosens when you shift from analysis to action. Try a short experiment or a simple daily routine to move your thoughts into motion.",
+            business_idea: "For business ideas, begin with a small test rather than a perfect plan. Validate one offer with a simple customer conversation or pilot service.",
+            business_stress: "When business stress is high, focus on one manageable part of your plan. Protect your energy and simplify your next step.",
+            financial_fear: "Financial security builds from small, consistent improvements. Track your spending, prioritize urgent needs, and create a realistic short-term plan.",
+            family_pressure: "Family pressure can feel heavy, so build your own boundaries gently. Clearly communicate your priorities and protect your mental space.",
+            no_clarity: "Clarity often appears when you narrow your focus to one choice at a time. Choose a small experiment and learn from the result.",
+            no_skill_confidence: "Skill confidence grows through repeated practice and feedback. Start with a small learning step and celebrate how far you've already come.",
         };
         const primaryProblem = rootProblems[0];
         return strategies[primaryProblem] ||
@@ -333,20 +547,29 @@ class LumiResponseGenerator {
     }
     // Main response generation method
     generateResponse(message) {
-        // Analyze the message
-        const emotionalState = this.analyzeEmotionalState(message);
-        const rootProblems = this.identifyRootProblem(message, emotionalState);
+        // Analyze the message using layered reasoning
+        const emotionalStates = this.analyzeEmotionalStates(message);
+        const primaryEmotion = emotionalStates[0] || "neutral";
+        const rootProblems = this.identifyRootProblems(message, emotionalStates);
+        const decisionStrategy = this.determineDecisionStrategy(message, rootProblems);
+        const repeatedPatternMessage = this.registerPatternInContext(rootProblems, emotionalStates);
         // Update context with new analysis
-        this.context.emotionalPatterns.lastEmotionalState = emotionalState;
-        if (!this.context.emotionalPatterns.dominantEmotions.includes(emotionalState)) {
-            this.context.emotionalPatterns.dominantEmotions.push(emotionalState);
+        this.context.emotionalPatterns.lastEmotionalState = primaryEmotion;
+        for (const emotion of emotionalStates) {
+            if (!this.context.emotionalPatterns.dominantEmotions.includes(emotion)) {
+                this.context.emotionalPatterns.dominantEmotions.push(emotion);
+            }
         }
         // Build response using structured approach
         let responseText = "";
+        // Awareness of repeated patterns
+        if (repeatedPatternMessage) {
+            responseText += `**${repeatedPatternMessage}**\n\n`;
+        }
         // Start with validation
-        responseText += `**${this.validateFeelings(emotionalState)}**\n\n`;
+        responseText += `**${this.validateFeelings(primaryEmotion)}**\n\n`;
         // Add practical steps
-        const practicalSteps = this.generatePracticalSteps(rootProblems, emotionalState);
+        const practicalSteps = this.generatePracticalSteps(rootProblems, primaryEmotion);
         if (practicalSteps.length > 0) {
             responseText += "**Here's what you can do right now:**\n";
             practicalSteps.forEach((step, index) => {
@@ -355,29 +578,40 @@ class LumiResponseGenerator {
             responseText += "\n";
         }
         // Add targeted wisdom quote with explanation
-        const wisdom = this.selectWisdomQuote(emotionalState);
+        const wisdom = this.selectWisdomQuote(primaryEmotion);
         if (wisdom) {
             responseText += `💭 **"${wisdom.quote}"**\n— *${wisdom.author}*\n\n`;
             responseText += `**What this means:** ${wisdom.explanation}\n\n`;
         }
+        if (decisionStrategy) {
+            responseText += `**Decision insight:** ${decisionStrategy}\n\n`;
+        }
         // Add long-term strategy
-        responseText += `**For the longer term:** ${this.suggestLongTermStrategy(rootProblems, emotionalState)}\n\n`;
+        responseText += `**For the longer term:** ${this.suggestLongTermStrategy(rootProblems, primaryEmotion)}\n\n`;
         // End with closing
-        responseText += `**${this.generateClosing(emotionalState)}**`;
+        responseText += `**${this.generateClosing(primaryEmotion)}**`;
         // Generate suggestions and follow-ups
-        const suggestions = this.generateSuggestions(rootProblems, emotionalState);
-        const followUpQuestions = this.generateFollowUpQuestions(rootProblems, emotionalState);
+        const suggestions = this.generateSuggestions(rootProblems, primaryEmotion);
+        const followUpQuestions = this.generateFollowUpQuestions(rootProblems, primaryEmotion);
         return {
             message: responseText,
             suggestions,
             quickReplies: followUpQuestions,
-            emotionalInsight: `I sense you're experiencing **${emotionalState}** related to ${rootProblems.join(" and ")}. This is a normal part of being human.`,
+            emotionalInsight: `I sense you're experiencing **${emotionalStates.join(" + ")}** related to ${rootProblems.join(" and ")}. This is a normal part of being human.`,
+            emotionalStates,
+            rootProblems,
         };
     }
     generateSuggestions(rootProblems, emotionalState) {
         const suggestions = [];
         if (rootProblems.includes("social_connection")) {
             suggestions.push({ label: "Explore connection practices", href: "#healing", icon: "Heart" });
+        }
+        if (rootProblems.includes("business_idea") || rootProblems.includes("business_stress") || rootProblems.includes("student_business")) {
+            suggestions.push({ label: "Explore business mindset support", href: "#journey", icon: "Brain" });
+        }
+        if (rootProblems.includes("financial_fear")) {
+            suggestions.push({ label: "Review financial wellness tools", href: "#wellness", icon: "Activity" });
         }
         if (emotionalState === "anxiety") {
             suggestions.push({ label: "Try breathing exercises", href: "#breathe", icon: "Wind" });
@@ -413,6 +647,61 @@ class LumiResponseGenerator {
                 "What's one relationship you'd like to nurture?",
                 "What kind of connection would feel most healing right now?",
                 "What small step could you take toward connection today?",
+            ],
+            confusion: [
+                "What is one small choice that feels clearer than the rest?",
+                "What information do you still need to feel more certain?",
+                "What can you test quickly to reduce the uncertainty?",
+            ],
+            overthinking: [
+                "What would happen if you let one thought go for a little while?",
+                "What does your body need right now instead of your mind?",
+                "Can you choose one action that doesn't require a perfect answer?",
+            ],
+            burnout: [
+                "What is one thing you can stop doing this week?",
+                "What would rest look like for you today?",
+                "Where can you create a little more breathing room in your schedule?",
+            ],
+            self_doubt: [
+                "What proof do you have that you can do this?",
+                "What would you tell a friend who felt this unsure?",
+                "What small step would feel courageous even if it isn't perfect?",
+            ],
+            business_stress: [
+                "What is the most important business question you need clarity on?",
+                "Which part of this plan feels most overwhelming?",
+                "What practical step would make today feel less stressful?",
+            ],
+            financial_fear: [
+                "What is the smallest money concern you can solve first?",
+                "What resources do you already have that can help you feel more stable?",
+                "Who could you ask for practical advice about this situation?",
+            ],
+            business_idea: [
+                "What would a simple, low-risk version of this business look like?",
+                "Who is the first person you'd want to learn from about this idea?",
+                "What problem are you solving for someone else?",
+            ],
+            student_business: [
+                "How can this idea fit around your studies?",
+                "What low-cost way can you test this while still keeping your focus?",
+                "What is one thing you can learn from this week?",
+            ],
+            family_pressure: [
+                "What do you want to keep for yourself, regardless of others' expectations?",
+                "What would make you feel more in control of this situation?",
+                "How can you gently share your needs with the people around you?",
+            ],
+            no_clarity: [
+                "What is one decision you can make today, even if it's small?",
+                "What facts are clear enough to act on?",
+                "What do you need to feel a bit more certain?",
+            ],
+            no_skill_confidence: [
+                "What would you like to practice in a short, low-pressure way?",
+                "What evidence do you have that you can grow this skill?",
+                "Who could you ask for feedback or mentorship?",
             ],
             fear: [
                 "What specifically are you afraid might happen?",
@@ -478,6 +767,7 @@ router.post("/chat", async (req, res) => {
                     recurringStruggles: [],
                     progressAreas: [],
                     lastEmotionalState: "",
+                    repeatedPatterns: [],
                 },
                 userProfile: {
                     preferences: {
@@ -515,6 +805,8 @@ router.post("/chat", async (req, res) => {
             role: "assistant",
             content: response.message,
             timestamp: new Date(),
+            emotionalStates: response.emotionalStates,
+            rootProblems: response.rootProblems,
         });
         // Update conversation stats
         conversationContext.conversationStats.totalMessages++;

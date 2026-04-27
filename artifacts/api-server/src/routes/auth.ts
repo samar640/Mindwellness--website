@@ -10,7 +10,7 @@ import {
   findUserByResetToken,
   setPasswordResetToken,
   updateUserPassword,
-} from "../db/jsondb";
+} from "../db/jsondb.js";
 
 const router: IRouter = Router();
 

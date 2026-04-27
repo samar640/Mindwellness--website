@@ -2,7 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import { clearPasswordResetToken, createUser, findUserByEmail, findUserById, findUserByResetToken, setPasswordResetToken, updateUserPassword, } from "../db/jsondb";
+import { clearPasswordResetToken, createUser, findUserByEmail, findUserById, findUserByResetToken, setPasswordResetToken, updateUserPassword, } from "../db/jsondb.js";
 const router = Router();
 const RegisterBody = z.object({
     email: z.string().email(),
