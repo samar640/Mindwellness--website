@@ -1,0 +1,84 @@
+{
+  "sessionId": "jWnnNnlzm97zSSA1VEkis4kb4jcflyDL",
+  "messages": [
+    {
+      "id": "user_1777279099458",
+      "role": "user",
+      "content": "Start today's journey",
+      "timestamp": "2026-04-27T08:38:19.458Z"
+    },
+    {
+      "id": "assistant_1777279099465",
+      "role": "assistant",
+      "content": "Deep read:\n\nReply 1 — Emotional Reflection\nYou are not just describing a problem, you are describing a burden.\nPrimary signal: general support.\nUnderlying drivers: general_support.\nThis is valid, and it also needs a strategic response.\n\nReply 2 — Practical Strategy\nLet's convert this into actions you can execute immediately.\n1) Choose one hard thing and one kind thing to do today.\n\nReply 3 — Philosophical Clarity\nThree perspective anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nSmall truthful actions beat dramatic promises every time.",
+      "timestamp": "2026-04-27T08:38:19.465Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "general_support"
+    ],
+    "recurringStruggles": [
+      "general_support"
+    ],
+    "repeatedPatterns": [],
+    "emotionalLoops": [],
+    "lastEmotionalState": "general_support"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "start": 1,
+      "today's": 1,
+      "journey": 1
+    },
+    "adviceTried": {
+      "gen_1": 1
+    },
+    "adviceFailed": [],
+    "recentAdviceIds": [
+      "gen_1"
+    ],
+    "repeatedConcernCount": {
+      "general_support": 1
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 0,
+      "heartbreak": 0,
+      "anxiety": 0,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 1
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "detailed",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 1,
+    "commonTopics": {
+      "general_support": 1
+    },
+    "lastInteraction": "2026-04-27T08:38:19.465Z"
+  }
+}

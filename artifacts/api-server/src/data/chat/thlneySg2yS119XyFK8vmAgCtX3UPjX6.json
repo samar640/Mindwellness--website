@@ -1,0 +1,85 @@
+{
+  "sessionId": "thlneySg2yS119XyFK8vmAgCtX3UPjX6",
+  "messages": [
+    {
+      "id": "user_1777281308987",
+      "role": "user",
+      "content": "I feel lonely at night",
+      "timestamp": "2026-04-27T09:15:08.987Z"
+    },
+    {
+      "id": "assistant_1777281308993",
+      "role": "assistant",
+      "content": "Gentle support:\nYou sound unseen, and that hurts.\nLikely drivers: social_disconnection.\nTry this now:\n1) Replace one hour of passive scrolling with an active social action.\n2) Join one recurring group where contact is predictable.\n3) Send one low-pressure message to someone safe.\nThought: \"The opposite of love is not hate, it's indifference.\" — Elie Wiesel\nConnection grows through small repeated contact.",
+      "timestamp": "2026-04-27T09:15:08.993Z",
+      "emotionalStates": [
+        "loneliness"
+      ],
+      "rootProblems": [
+        "social_disconnection"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "loneliness"
+    ],
+    "recurringStruggles": [
+      "social_disconnection"
+    ],
+    "repeatedPatterns": [],
+    "emotionalLoops": [],
+    "lastEmotionalState": "loneliness"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "feel": 1,
+      "lonely": 1,
+      "night": 1
+    },
+    "adviceTried": {},
+    "adviceFailed": [],
+    "recentAdviceIds": [],
+    "repeatedConcernCount": {
+      "social_disconnection": 1
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 1,
+      "heartbreak": 0,
+      "anxiety": 0,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 0
+    },
+    "providerQuality": {
+      "local": 1.2,
+      "gpt": 1,
+      "gemini": 1
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "gentle",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 1,
+    "commonTopics": {
+      "loneliness": 1
+    },
+    "lastInteraction": "2026-04-27T09:15:08.993Z"
+  }
+}

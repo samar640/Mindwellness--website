@@ -1,0 +1,147 @@
+{
+  "sessionId": "o3IGq9w8h4_oj3XRAksARKSeUr1XWgNL",
+  "messages": [
+    {
+      "id": "user_1777280569810",
+      "role": "user",
+      "content": "HII",
+      "timestamp": "2026-04-27T09:02:49.810Z"
+    },
+    {
+      "id": "assistant_1777280569811",
+      "role": "assistant",
+      "content": "Deep analysis:\n\nReply 1 — Emotional Reflection\nYou are signaling general support.\nHidden pressure likely includes: general_support.\nThis is valid emotion, and it needs strategy, not only comfort.\n\nReply 2 — Practical Strategy\nDo this in the next 48 hours:\n1) Choose one hard thing and one kind thing to do today.\n2) Start with one clear, low-friction next step.\n3) Check sleep, food, movement before major conclusions.\n\nReply 3 — Philosophical Clarity\nThree anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nTake one honest step today and evaluate tomorrow, not in your head right now.",
+      "timestamp": "2026-04-27T09:02:49.811Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777280593317",
+      "role": "user",
+      "content": "Help me reflect deeply",
+      "timestamp": "2026-04-27T09:03:13.317Z"
+    },
+    {
+      "id": "assistant_1777280593319",
+      "role": "assistant",
+      "content": "Deep analysis:\n\nReply 1 — Emotional Mirror\nYou are signaling general support.\nHidden pressure likely includes: general_support.\nPattern alert: general_support has repeated; we should break the loop now.\n\nReply 2 — Action Blueprint\nDo this in the next 48 hours:\n1) Choose one hard thing and one kind thing to do today.\n2) Start with one clear, low-friction next step.\n3) Check sleep, food, movement before major conclusions.\n\nReply 3 — Perspective Anchor\nThree perspective anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nTake one honest step today and evaluate tomorrow, not in your head right now.",
+      "timestamp": "2026-04-27T09:03:13.319Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777280616961",
+      "role": "user",
+      "content": "I AM ANIXOUS",
+      "timestamp": "2026-04-27T09:03:36.961Z"
+    },
+    {
+      "id": "assistant_1777280616961",
+      "role": "assistant",
+      "content": "Deep analysis:\n\nReply 1 — Emotional Mirror\nYou are signaling general support.\nHidden pressure likely includes: general_support.\nPattern alert: general_support has repeated; we should break the loop now.\n\nReply 2 — Action Blueprint\nDo this in the next 48 hours:\n1) Start with one clear, low-friction next step.\n2) Check sleep, food, movement before major conclusions.\n3) Choose one hard thing and one kind thing to do today.\n\nReply 3 — Perspective Anchor\nThree perspective anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nTake one honest step today and evaluate tomorrow, not in your head right now.",
+      "timestamp": "2026-04-27T09:03:36.961Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777280640894",
+      "role": "user",
+      "content": "Ask what matters most",
+      "timestamp": "2026-04-27T09:04:00.894Z"
+    },
+    {
+      "id": "assistant_1777280640895",
+      "role": "assistant",
+      "content": "Deep analysis:\n\nReply 1 — Emotional Mirror\nYou are signaling general support.\nHidden pressure likely includes: general_support.\nPattern alert: general_support has repeated; we should break the loop now.\n\nReply 2 — Action Blueprint\nDo this in the next 48 hours:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\n\nReply 3 — Perspective Anchor\nThree perspective anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nTake one honest step today and evaluate tomorrow, not in your head right now.",
+      "timestamp": "2026-04-27T09:04:00.895Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "general_support"
+    ],
+    "recurringStruggles": [
+      "general_support"
+    ],
+    "repeatedPatterns": [
+      "general_support"
+    ],
+    "emotionalLoops": [
+      "general_support"
+    ],
+    "lastEmotionalState": "general_support"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "help": 1,
+      "reflect": 1,
+      "deeply": 1,
+      "anixous": 1,
+      "what": 1,
+      "matters": 1,
+      "most": 1
+    },
+    "adviceTried": {},
+    "adviceFailed": [],
+    "recentAdviceIds": [],
+    "repeatedConcernCount": {
+      "general_support": 4
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 0,
+      "heartbreak": 0,
+      "anxiety": 0,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 4
+    },
+    "providerQuality": {
+      "local": 1.7999999999999998,
+      "gpt": 1,
+      "gemini": 1
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "detailed",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 4,
+    "commonTopics": {
+      "general_support": 4
+    },
+    "lastInteraction": "2026-04-27T09:04:00.895Z"
+  }
+}

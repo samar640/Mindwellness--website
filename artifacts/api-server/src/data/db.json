@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "id": "9a672a32-5f56-4cc8-a6e4-1e3a9c1debf0",
+      "email": "samrattiwari038@gmail.com",
+      "passwordHash": "$2b$12$bVTAoDtRAVimfxb57NJns.rCg/onsArKqHvLP7Ta8K0NHSpJT7xQW",
+      "createdAt": 1777278192158
+    },
+    {
+      "id": "bf51510f-0f03-4c86-af3a-36e7607aa83b",
+      "email": "authtest_1777279072313@example.com",
+      "passwordHash": "$2b$12$z5rIwvp4W3DBMnyj7y/Mk.aolzg6lTz71xmfWagSqugVyQiTdxH5i",
+      "createdAt": 1777279073831
+    }
+  ]
+}

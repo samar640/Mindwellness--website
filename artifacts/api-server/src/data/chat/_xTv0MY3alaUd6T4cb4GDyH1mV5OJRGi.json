@@ -1,0 +1,259 @@
+{
+  "sessionId": "_xTv0MY3alaUd6T4cb4GDyH1mV5OJRGi",
+  "messages": [
+    {
+      "id": "user_1777294939479",
+      "role": "user",
+      "content": "I'm having a hard day",
+      "timestamp": "2026-04-27T13:02:19.479Z"
+    },
+    {
+      "id": "assistant_1777294939483",
+      "role": "assistant",
+      "content": "Support plan:\nI hear you, and we can make this practical.\nLikely drivers: general_support.\nTry this now:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nOne small honest step is enough for now.",
+      "timestamp": "2026-04-27T13:02:19.483Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777294960277",
+      "role": "user",
+      "content": "please help me",
+      "timestamp": "2026-04-27T13:02:40.277Z"
+    },
+    {
+      "id": "assistant_1777294960279",
+      "role": "assistant",
+      "content": "Support plan:\nI hear you, and we can make this practical.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nStart simple and stay consistent.",
+      "timestamp": "2026-04-27T13:02:40.279Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777294997746",
+      "role": "user",
+      "content": "i had a very bad day",
+      "timestamp": "2026-04-27T13:03:17.746Z"
+    },
+    {
+      "id": "assistant_1777294997748",
+      "role": "assistant",
+      "content": "Support plan:\nLet's slow this down and make it workable.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Start with one clear, low-friction next step.\n2) Choose one hard thing and one kind thing to do today.\n3) Check sleep, food, movement before major conclusions.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nOne small honest step is enough for now.",
+      "timestamp": "2026-04-27T13:03:17.748Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777295028073",
+      "role": "user",
+      "content": "Help me reflect deeply",
+      "timestamp": "2026-04-27T13:03:48.073Z"
+    },
+    {
+      "id": "assistant_1777295028075",
+      "role": "assistant",
+      "content": "Support plan:\nI hear you, and we can make this practical.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Choose one hard thing and one kind thing to do today.\n2) Start with one clear, low-friction next step.\n3) Check sleep, food, movement before major conclusions.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nOne small honest step is enough for now.",
+      "timestamp": "2026-04-27T13:03:48.075Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777295034189",
+      "role": "user",
+      "content": "Give a clear next step",
+      "timestamp": "2026-04-27T13:03:54.189Z"
+    },
+    {
+      "id": "assistant_1777295034190",
+      "role": "assistant",
+      "content": "Support plan:\nLet's slow this down and make it workable.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Choose one hard thing and one kind thing to do today.\n2) Start with one clear, low-friction next step.\n3) Check sleep, food, movement before major conclusions.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nStart simple and stay consistent.",
+      "timestamp": "2026-04-27T13:03:54.190Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777295050121",
+      "role": "user",
+      "content": "Ask what matters most",
+      "timestamp": "2026-04-27T13:04:10.121Z"
+    },
+    {
+      "id": "assistant_1777295050121",
+      "role": "assistant",
+      "content": "Support plan:\nI hear you, and we can make this practical.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nStart simple and stay consistent.",
+      "timestamp": "2026-04-27T13:04:10.121Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777295104009",
+      "role": "user",
+      "content": "i am feeling lonely , sad , angry , have very hard yime in my life",
+      "timestamp": "2026-04-27T13:05:04.009Z"
+    },
+    {
+      "id": "assistant_1777295104009",
+      "role": "assistant",
+      "content": "Support plan:\nThis sounds like emotional heaviness, not laziness.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Tell one trusted person you are having a low-energy day.\n2) Pick one soft stabilizer: sunlight, warm shower, or 10-minute walk.\n3) Name the feeling and the unmet need in one line each.\nThought: \"The wound is the place where light enters you.\" — Rumi\nToday, reducing pain by 10% is enough.",
+      "timestamp": "2026-04-27T13:05:04.009Z",
+      "emotionalStates": [
+        "sadness",
+        "loneliness"
+      ],
+      "rootProblems": [
+        "social_disconnection"
+      ]
+    },
+    {
+      "id": "user_1777295141713",
+      "role": "user",
+      "content": "how many signals do you have",
+      "timestamp": "2026-04-27T13:05:41.713Z"
+    },
+    {
+      "id": "assistant_1777295141714",
+      "role": "assistant",
+      "content": "Support plan:\nI hear you, and we can make this practical.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nOne small honest step is enough for now.",
+      "timestamp": "2026-04-27T13:05:41.714Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777295196069",
+      "role": "user",
+      "content": "help me",
+      "timestamp": "2026-04-27T13:06:36.069Z"
+    },
+    {
+      "id": "assistant_1777295196069",
+      "role": "assistant",
+      "content": "Support plan:\nLet's slow this down and make it workable.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nOne small honest step is enough for now.",
+      "timestamp": "2026-04-27T13:06:36.069Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "general_support",
+      "sadness",
+      "loneliness"
+    ],
+    "recurringStruggles": [
+      "general_support",
+      "social_disconnection"
+    ],
+    "repeatedPatterns": [
+      "general_support"
+    ],
+    "emotionalLoops": [
+      "general_support"
+    ],
+    "lastEmotionalState": "general_support"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "having": 1,
+      "hard": 2,
+      "please": 1,
+      "help": 3,
+      "very": 2,
+      "reflect": 1,
+      "deeply": 1,
+      "give": 1,
+      "clear": 1,
+      "next": 1,
+      "step": 1,
+      "what": 1,
+      "matters": 1,
+      "most": 1,
+      "feeling": 1,
+      "lonely": 1,
+      "angry": 1,
+      "have": 2,
+      "yime": 1,
+      "life": 1,
+      "many": 1,
+      "signals": 1
+    },
+    "adviceTried": {},
+    "adviceFailed": [],
+    "recentAdviceIds": [],
+    "repeatedConcernCount": {
+      "general_support": 8,
+      "social_disconnection": 1
+    },
+    "domainConfidence": {
+      "sadness": 1,
+      "loneliness": 1,
+      "heartbreak": 0,
+      "anxiety": 0,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 8
+    },
+    "providerQuality": {
+      "local": 2.8000000000000003,
+      "gpt": 1,
+      "gemini": 1
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "detailed",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 9,
+    "commonTopics": {
+      "general_support": 8,
+      "sadness": 1,
+      "loneliness": 1
+    },
+    "lastInteraction": "2026-04-27T13:06:36.069Z"
+  }
+}

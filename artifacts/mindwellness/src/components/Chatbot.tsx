@@ -59,7 +59,13 @@ const fullTimeGreeting = () => {
 };
 
 // API call to backend
-const sendMessageToAPI = async (message: string, context?: any): Promise<ChatResponse> => {
+const sendMessageToAPI = async (
+  message: string,
+  context?: {
+    recentMessages?: string[];
+    communicationStyle?: "direct" | "gentle" | "detailed" | "concise";
+  },
+): Promise<ChatResponse> => {
   try {
     const apiEndpoint = `${API_BASE}/chat`;
     const response = await fetch(apiEndpoint, {
@@ -68,10 +74,7 @@ const sendMessageToAPI = async (message: string, context?: any): Promise<ChatRes
         "Content-Type": "application/json",
       },
       credentials: "include", // For session cookies
-      body: JSON.stringify({
-        message,
-        context: context || {},
-      }),
+      body: JSON.stringify({ message, context: context || {} }),
     });
 
     if (!response.ok) {
@@ -91,8 +94,8 @@ const generateFallbackReply = (input: string): Omit<Message, "id" | "from" | "ti
 
   if (/(hi|hello|hey)/i.test(text)) {
     return {
-      text: "Hello! I'm Lumi, your wellness companion. I'm currently connecting to my enhanced intelligence system. How are you feeling right now?",
-      quickReplies: ["I'm feeling anxious", "I need motivation", "Help me plan my day"],
+      text: "Hello, I'm Lumi — your emotionally aware companion for difficult emotions and practical life decisions.\n\nI listen first, then respond with emotional clarity, grounded strategy, and deeper perspective.\n\nTell me what feels heavy right now.",
+      quickReplies: ["I'm feeling anxious", "I'm confused about my career", "I feel lonely"],
     };
   }
 
@@ -141,9 +144,15 @@ const getIconComponent = (iconName?: string): React.ElementType | undefined => {
 };
 
 // Generate intelligent responses using API
-async function generateReply(input: string): Promise<Omit<Message, "id" | "from" | "time">> {
+async function generateReply(
+  input: string,
+  context?: {
+    recentMessages?: string[];
+    communicationStyle?: "direct" | "gentle" | "detailed" | "concise";
+  },
+): Promise<Omit<Message, "id" | "from" | "time">> {
   try {
-    const apiResponse = await sendMessageToAPI(input);
+    const apiResponse = await sendMessageToAPI(input, context);
 
     // Convert API response to Message format
     return {
@@ -179,7 +188,7 @@ export function Chatbot() {
       setMessages([{
         id: 1,
         from: "bot",
-        text: `Good ${part} 💛 I'm **Lumi**, your gentle companion for wellness and self-care.\n\nI'm here to listen with compassion and understanding, not as a replacement for professional help. Whether you need to talk about what's weighing on your heart, explore some calming practices, or create a nurturing plan for your day — I'm here for you.\n\nHow are you feeling right now? There's no pressure to share everything at once.`,
+        text: `Good ${part} 💛 I'm **Lumi** — a wise, emotionally intelligent companion for both inner struggles and practical decisions.\n\nI help with sadness, anxiety, heartbreak, self-doubt, money stress, career confusion, business uncertainty, sleep issues, and consistency problems.\n\nWhen you share, I respond in three layers: emotional reflection, practical strategy, and deeper perspective. What's weighing on you right now?`,
         suggestions: [
           { label: "Start today's journey", href: "#journey", icon: Sun },
         ],
@@ -211,7 +220,14 @@ export function Chatbot() {
     setTyping(true);
 
     try {
-      const reply = await generateReply(text);
+      const recentMessages = messages
+        .slice(-6)
+        .map((m) => `${m.from}: ${m.text}`)
+        .slice(-6);
+      const reply = await generateReply(text, {
+        recentMessages,
+        communicationStyle: "detailed",
+      });
       const botMsg: Message = {
         id: Date.now() + 1,
         from: "bot",

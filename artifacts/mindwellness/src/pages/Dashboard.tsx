@@ -72,11 +72,40 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}>
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3 hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group">
-                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
-                  <Icon className="w-6 h-6 text-emerald-600" />
-                </div>
-                <span className="text-sm font-medium text-slate-700 text-center">{label}</span>
+              <div className="cursor-pointer">
+                {href === "/journey" ? (
+                  <div className="relative overflow-hidden rounded-[28px] border border-indigo-200 bg-gradient-to-br from-indigo-50 via-blue-50 to-white p-5 hover:shadow-xl transition-all min-h-[140px]">
+                    <div className="absolute right-4 top-4 text-[28px]">🧗‍♂️</div>
+                    <div className="absolute right-5 bottom-4 flex gap-1">
+                      <span className="w-2 h-2 rounded-full bg-indigo-300" />
+                      <span className="w-2 h-3 rounded-sm bg-indigo-400" />
+                      <span className="w-2 h-4 rounded-sm bg-indigo-500" />
+                      <span className="w-2 h-5 rounded-sm bg-indigo-600" />
+                    </div>
+                    <div className="w-14 h-14 bg-indigo-100/90 rounded-3xl flex items-center justify-center shadow-sm">
+                      <BookOpen className="w-6 h-6 text-indigo-700" />
+                    </div>
+                    <p className="mt-4 text-sm font-semibold text-indigo-900">Journey</p>
+                    <p className="text-xs text-indigo-700/90">Climb your wellness path one step at a time.</p>
+                  </div>
+                ) : href === "/healing" ? (
+                  <div className="relative overflow-hidden rounded-[28px] border border-emerald-200 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-5 hover:shadow-xl transition-all min-h-[140px]">
+                    <div className="absolute right-4 top-4 text-[28px]">🧘‍♀️</div>
+                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-emerald-200/80 to-transparent" />
+                    <div className="w-14 h-14 bg-emerald-100/90 rounded-3xl flex items-center justify-center shadow-sm">
+                      <Brain className="w-6 h-6 text-emerald-700" />
+                    </div>
+                    <p className="mt-4 text-sm font-semibold text-emerald-900">Healing</p>
+                    <p className="text-xs text-emerald-700/90">Meditation, calm thinking, and inner reset.</p>
+                  </div>
+                ) : (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3 hover:border-emerald-300 hover:shadow-md transition-all min-h-[132px]">
+                    <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center transition-colors">
+                      <Icon className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 text-center">{label}</span>
+                  </div>
+                )}
               </div>
             </Link>
           ))}

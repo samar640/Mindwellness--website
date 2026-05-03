@@ -45,6 +45,10 @@ export function findUserById(id) {
 }
 export function createUser(emailLower, passwordHash) {
     const db = readDb();
+    const existing = db.users.find((u) => u.email === emailLower);
+    if (existing) {
+        return existing;
+    }
     const user = {
         id: randomUUID(),
         email: emailLower,

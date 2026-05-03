@@ -1,0 +1,84 @@
+{
+  "sessionId": "91F6GmF-d-R3MvV929DHfMLVzFlrtgbz",
+  "messages": [
+    {
+      "id": "user_1777280541664",
+      "role": "user",
+      "content": "I'm having a hard day",
+      "timestamp": "2026-04-27T09:02:21.664Z"
+    },
+    {
+      "id": "assistant_1777280541664",
+      "role": "assistant",
+      "content": "Deep analysis:\n\nReply 1 — Emotional Reflection\nYou are signaling general support.\nHidden pressure likely includes: general_support.\nThis is valid emotion, and it needs strategy, not only comfort.\n\nReply 2 — Practical Strategy\nDo this in the next 48 hours:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\n\nReply 3 — Philosophical Clarity\nThree anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nTake one honest step today and evaluate tomorrow, not in your head right now.",
+      "timestamp": "2026-04-27T09:02:21.664Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "general_support"
+    ],
+    "recurringStruggles": [
+      "general_support"
+    ],
+    "repeatedPatterns": [],
+    "emotionalLoops": [],
+    "lastEmotionalState": "general_support"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "having": 1,
+      "hard": 1
+    },
+    "adviceTried": {},
+    "adviceFailed": [],
+    "recentAdviceIds": [],
+    "repeatedConcernCount": {
+      "general_support": 1
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 0,
+      "heartbreak": 0,
+      "anxiety": 0,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 1
+    },
+    "providerQuality": {
+      "local": 1.2,
+      "gpt": 1,
+      "gemini": 1
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "detailed",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 1,
+    "commonTopics": {
+      "general_support": 1
+    },
+    "lastInteraction": "2026-04-27T09:02:21.664Z"
+  }
+}

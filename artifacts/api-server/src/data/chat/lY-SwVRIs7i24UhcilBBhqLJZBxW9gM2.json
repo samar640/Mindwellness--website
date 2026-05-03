@@ -1,0 +1,89 @@
+{
+  "sessionId": "lY-SwVRIs7i24UhcilBBhqLJZBxW9gM2",
+  "messages": [
+    {
+      "id": "user_1777278077091",
+      "role": "user",
+      "content": "I feel anxious and confused about career",
+      "timestamp": "2026-04-27T08:21:17.091Z"
+    },
+    {
+      "id": "assistant_1777278077093",
+      "role": "assistant",
+      "content": "Grounded support:\n\nReply 1 — Emotional Reflection\nI can see both the emotion and the decision fatigue in this.\nPrimary signal: anxiety.\nUnderlying drivers: lack_of_clarity.\nThis is valid, and it also needs a strategic response.\n\nReply 2 — Practical Strategy\nLet's convert this into actions you can execute immediately.\n1) Write facts vs fears in two columns, then act on facts only.\n\nReply 3 — Philosophical Clarity\nThree perspective anchors:\n\"We suffer more often in imagination than in reality.\" — Seneca\n\"Between stimulus and response there is a space.\" — Viktor Frankl\n\"To live is to suffer, to survive is to find meaning in the suffering.\" — Nietzsche\nSmall truthful actions beat dramatic promises every time.",
+      "timestamp": "2026-04-27T08:21:17.093Z",
+      "emotionalStates": [
+        "anxiety",
+        "career_confusion"
+      ],
+      "rootProblems": [
+        "lack_of_clarity"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "anxiety",
+      "career_confusion"
+    ],
+    "recurringStruggles": [
+      "lack_of_clarity"
+    ],
+    "repeatedPatterns": [],
+    "emotionalLoops": [],
+    "lastEmotionalState": "anxiety"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "feel": 1,
+      "anxious": 1,
+      "confused": 1,
+      "about": 1,
+      "career": 1
+    },
+    "adviceTried": {
+      "anx_1": 1
+    },
+    "adviceFailed": [],
+    "recentAdviceIds": [
+      "anx_1"
+    ],
+    "repeatedConcernCount": {
+      "lack_of_clarity": 1
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 0,
+      "heartbreak": 0,
+      "anxiety": 1,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 1,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 0
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "gentle",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 1,
+    "commonTopics": {
+      "anxiety": 1,
+      "career_confusion": 1
+    },
+    "lastInteraction": "2026-04-27T08:21:17.093Z"
+  }
+}

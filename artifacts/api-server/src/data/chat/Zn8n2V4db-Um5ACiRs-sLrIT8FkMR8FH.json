@@ -1,0 +1,85 @@
+{
+  "sessionId": "Zn8n2V4db-Um5ACiRs-sLrIT8FkMR8FH",
+  "messages": [
+    {
+      "id": "user_1777281309016",
+      "role": "user",
+      "content": "I am anxious about my future",
+      "timestamp": "2026-04-27T09:15:09.016Z"
+    },
+    {
+      "id": "assistant_1777281309019",
+      "role": "assistant",
+      "content": "Gentle support:\nYour nervous system sounds overloaded right now.\nLikely drivers: general_support.\nTry this now:\n1) Do one 4-6 breathing cycle for 3 minutes before decisions.\n2) Write facts vs fears in two columns and act only on facts.\n3) Shrink the horizon: solve only the next 24 hours.\nThought: \"We suffer more in imagination than in reality.\" — Seneca\nCalm first, decisions second.",
+      "timestamp": "2026-04-27T09:15:09.019Z",
+      "emotionalStates": [
+        "anxiety"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "anxiety"
+    ],
+    "recurringStruggles": [
+      "general_support"
+    ],
+    "repeatedPatterns": [],
+    "emotionalLoops": [],
+    "lastEmotionalState": "anxiety"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "anxious": 1,
+      "about": 1,
+      "future": 1
+    },
+    "adviceTried": {},
+    "adviceFailed": [],
+    "recentAdviceIds": [],
+    "repeatedConcernCount": {
+      "general_support": 1
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 0,
+      "heartbreak": 0,
+      "anxiety": 1,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 0
+    },
+    "providerQuality": {
+      "local": 1.2,
+      "gpt": 1,
+      "gemini": 1
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "gentle",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 1,
+    "commonTopics": {
+      "anxiety": 1
+    },
+    "lastInteraction": "2026-04-27T09:15:09.019Z"
+  }
+}

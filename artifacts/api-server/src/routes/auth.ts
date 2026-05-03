@@ -22,6 +22,7 @@ const RegisterBody = z.object({
 const LoginBody = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  rememberMe: z.boolean().optional(),
 });
 
 const ForgotPasswordBody = z.object({
@@ -58,11 +59,24 @@ router.post("/auth/register", async (req: Request, res: Response) => {
     // Insert user
     const newUser = createUser(emailLower, passwordHash);
 
-    // Set session
-    req.session.userId = newUser.id;
-    req.session.userEmail = newUser.email;
-
-    res.status(201).json({ id: newUser.id, email: newUser.email });
+    req.session.regenerate((regenErr) => {
+      if (regenErr) {
+        console.error("Register session regenerate error:", regenErr);
+        res.status(500).json({ error: "Could not start your session." });
+        return;
+      }
+      req.session.userId = newUser.id;
+      req.session.userEmail = newUser.email;
+      req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000;
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("Register session save error:", saveErr);
+          res.status(500).json({ error: "Could not persist your session." });
+          return;
+        }
+        res.status(201).json({ id: newUser.id, email: newUser.email });
+      });
+    });
   } catch (err) {
     console.error("Register error:", err);
     res.status(500).json({ error: "Internal server error." });
@@ -77,27 +91,40 @@ router.post("/auth/login", async (req: Request, res: Response) => {
     return;
   }
 
-  const { email, password } = parsed.data;
+  const { email, password, rememberMe } = parsed.data;
   const emailLower = email.trim().toLowerCase();
 
   try {
     const user = findUserByEmail(emailLower);
     if (!user) {
-      res.status(404).json({ error: "Email not found." });
+      res.status(401).json({ error: "Invalid email or password." });
       return;
     }
 
     const passwordMatch = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatch) {
-      res.status(401).json({ error: "Wrong password." });
+      res.status(401).json({ error: "Invalid email or password." });
       return;
     }
 
-    // Set session
-    req.session.userId = user.id;
-    req.session.userEmail = user.email;
-
-    res.json({ id: user.id, email: user.email });
+    req.session.regenerate((regenErr) => {
+      if (regenErr) {
+        console.error("Login session regenerate error:", regenErr);
+        res.status(500).json({ error: "Could not start your session." });
+        return;
+      }
+      req.session.userId = user.id;
+      req.session.userEmail = user.email;
+      req.session.cookie.maxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("Login session save error:", saveErr);
+          res.status(500).json({ error: "Could not persist your session." });
+          return;
+        }
+        res.json({ id: user.id, email: user.email });
+      });
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Internal server error." });
@@ -173,7 +200,11 @@ router.post("/auth/logout", (req: Request, res: Response) => {
       res.status(500).json({ error: "Could not log out." });
       return;
     }
-    res.clearCookie("mw.sid");
+    res.clearCookie("mw.sid", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
     res.json({ message: "Logged out successfully." });
   });
 });

@@ -5,16 +5,24 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Leaf, Eye, EyeOff, Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setLocation] = useLocation();
-  const { login, user, isLoading } = useAuth();
+  const { login, user, isLoading, lastLoginEmail } = useAuth();
+
+  useEffect(() => {
+    if (lastLoginEmail && !email) {
+      setEmail(lastLoginEmail);
+    }
+  }, [lastLoginEmail, email]);
 
   // If already logged in, redirect to dashboard
   useEffect(() => {
@@ -37,7 +45,7 @@ export default function Login() {
 
     setIsSubmitting(true);
     try {
-      await login(trimmed, password);
+      await login(trimmed, password, { rememberMe });
       setLocation("/dashboard");
     } catch (err: any) {
       setError(err?.message || "Could not sign in. Please try again.");
@@ -94,6 +102,17 @@ export default function Login() {
                 className="bg-background/60 border-border focus-visible:ring-primary rounded-xl pl-10 pr-4 h-12 text-base"
               />
             </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-xl border border-border/70 bg-secondary/30 px-3 py-2.5">
+            <label htmlFor="remember-me" className="text-sm text-foreground cursor-pointer">
+              Remember last login
+            </label>
+            <Checkbox
+              id="remember-me"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+            />
           </div>
 
           <div className="space-y-1.5">

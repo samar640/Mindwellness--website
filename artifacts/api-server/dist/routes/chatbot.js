@@ -1,834 +1,640 @@
 import { Router } from "express";
 import { z } from "zod";
+import { loadChatContext, saveChatContext } from "../db/chatMemory.js";
 const router = Router();
-// In-memory conversation storage (in production, use Redis or database)
-const conversationStore = new Map();
-// Track recently used responses to avoid repetition
-const responseHistory = new Map([]);
-// Helper function to get random item from array
-const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-// Helper function to pick from array, avoiding recent repeats
-const pickVaried = (arr, sessionId, type) => {
-    if (arr.length <= 1)
-        return arr[0];
-    let history = responseHistory.get(sessionId);
-    if (!history) {
-        history = { validations: [], closings: [], actions: [] };
-        responseHistory.set(sessionId, history);
-    }
-    const recent = history[type];
-    const available = arr.filter(item => !recent.includes(String(item)));
-    if (available.length === 0) {
-        history[type] = [];
-        return pickRandom(arr);
-    }
-    const selected = pickRandom(available);
-    recent.push(String(selected));
-    // Keep only last 3 to allow some repetition after time
-    if (recent.length > 3)
-        recent.shift();
-    return selected;
-};
-// Zod schemas for validation
+const cache = new Map();
 const ChatRequestSchema = z.object({
-    message: z.string().min(1).max(2000),
-    context: z.object({
+    message: z.string().min(1).max(3000),
+    context: z
+        .object({
         emotionalState: z.string().optional(),
         currentPage: z.string().optional(),
         userGoals: z.array(z.string()).optional(),
-    }).optional(),
+        communicationStyle: z.enum(["direct", "gentle", "detailed", "concise"]).optional(),
+        recentMessages: z.array(z.string()).optional(),
+    })
+        .optional(),
 });
 const ChatResponseSchema = z.object({
     message: z.string(),
-    suggestions: z.array(z.object({
+    suggestions: z
+        .array(z.object({
         label: z.string(),
         href: z.string(),
         icon: z.string().optional(),
-    })).optional(),
+    }))
+        .optional(),
     quickReplies: z.array(z.string()).optional(),
     emotionalInsight: z.string().optional(),
     emotionalStates: z.array(z.string()).optional(),
     rootProblems: z.array(z.string()).optional(),
     followUpQuestions: z.array(z.string()).optional(),
 });
-// Wisdom and knowledge base
-const WISDOM_LIBRARY = {
+const GREETING_PATTERN = /^(hi|hello|hey|who are you|how are you|what do you do|what can you do|introduce yourself)\b/i;
+const DOMAIN_PATTERNS = {
+    sadness: ["sad", "empty", "depressed", "low", "grief"],
+    loneliness: ["lonely", "alone", "isolated", "nobody"],
+    heartbreak: ["heartbreak", "breakup", "left me", "betrayed"],
+    anxiety: ["anxious", "panic", "fear", "worried", "uneasy"],
+    overthinking: ["overthinking", "can't stop thinking", "loop", "racing thoughts"],
+    self_doubt: ["not enough", "not confident", "imposter", "doubt myself"],
+    financial_stress: ["money", "debt", "rent", "broke", "budget", "expenses"],
+    career_confusion: ["career", "job direction", "confused about work", "what should i do"],
+    new_job_stress: ["new job", "manager", "first week", "probation"],
+    business_confusion: ["business", "startup", "service", "clients", "entrepreneur"],
+    sleep_issues: ["can't sleep", "insomnia", "sleep", "waking up tired"],
+    discipline_issues: ["procrastinate", "inconsistent", "discipline", "motivation"],
+    burnout: ["burnout", "drained", "exhausted", "tired of trying"],
+    general_support: [],
+};
+const ROOT_CAUSE_PATTERNS = {
+    fear_of_failure: ["fear of failure", "what if i fail", "afraid to fail"],
+    lack_of_clarity: ["unclear", "confused", "don't know", "stuck", "future feels unclear", "no direction"],
+    low_self_trust: ["doubt myself", "not confident", "can't trust myself"],
+    resource_pressure: ["no money", "budget", "rent", "debt", "expenses"],
+    social_disconnection: ["alone", "lonely", "isolated", "nobody"],
+    family_pressure: ["parents", "family pressure", "expectations"],
+    perfectionism: ["perfect", "not ready", "not good enough yet"],
+    workload_overload: ["too much work", "overloaded", "too many tasks"],
+    sleep_deprivation: ["can't sleep", "insomnia", "waking up tired"],
+};
+const DOMAIN_QUOTES = {
+    sadness: [{ quote: "The wound is the place where light enters you.", author: "Rumi" }],
+    loneliness: [{ quote: "The opposite of love is not hate, it's indifference.", author: "Elie Wiesel" }],
+    heartbreak: [{ quote: "Out of suffering have emerged the strongest souls.", author: "Khalil Gibran" }],
+    anxiety: [{ quote: "We suffer more in imagination than in reality.", author: "Seneca" }],
+    overthinking: [{ quote: "A man who suffers before it is necessary suffers more than needed.", author: "Seneca" }],
+    self_doubt: [{ quote: "The privilege of a lifetime is to become who you truly are.", author: "Carl Jung" }],
+    financial_stress: [{ quote: "Luck is what happens when preparation meets opportunity.", author: "Seneca" }],
+    career_confusion: [{ quote: "Do not confuse motion and progress.", author: "Alfred A. Montapert" }],
+    new_job_stress: [{ quote: "Courage is grace under pressure.", author: "Ernest Hemingway" }],
+    business_confusion: [{ quote: "Done is better than perfect.", author: "Sheryl Sandberg" }],
+    sleep_issues: [{ quote: "Rest and self-care are not luxuries.", author: "Audre Lorde" }],
+    discipline_issues: [{ quote: "Excellence is a habit.", author: "Aristotle" }],
+    burnout: [{ quote: "You can’t pour from an empty cup.", author: "Norm Kelly" }],
+    general_support: [{ quote: "A journey of a thousand miles begins with a single step.", author: "Lao Tzu" }],
+};
+const DOMAIN_OPENERS = {
+    sadness: ["This sounds like emotional heaviness, not laziness.", "You are carrying real sadness right now."],
+    loneliness: ["This feels like disconnection more than just being alone.", "You sound unseen, and that hurts."],
+    heartbreak: ["This is heartbreak pain, not just a bad mood.", "Your system is grieving a bond, not failing."],
+    anxiety: ["Your nervous system sounds overloaded right now.", "This reads like anxiety pressure, not weakness."],
+    overthinking: ["Your mind is looping because this matters deeply.", "You are trapped in analysis mode right now."],
+    self_doubt: ["Your confidence is under attack, not your actual ability.", "This sounds like self-doubt talking louder than evidence."],
+    financial_stress: ["This is financial pressure, and it is practical, not imaginary.", "Money stress is distorting your sense of safety."],
+    career_confusion: ["This is direction fog, not failure.", "You need clarity through action, not more guessing."],
+    new_job_stress: ["This is early-stage job stress, very common and manageable.", "You are adapting under pressure, not falling behind."],
+    business_confusion: ["This is business uncertainty, not incompetence.", "You need market feedback, not more internal pressure."],
+    sleep_issues: ["This sounds like a sleep-regulation issue, not just discipline.", "Your rest system is dysregulated right now."],
+    discipline_issues: ["This is a consistency design problem, not a character flaw.", "Your system needs smaller wins, not harsher self-talk."],
+    burnout: ["This is burnout signal, and your body is asking for recovery.", "You are depleted, and that must be respected."],
+    general_support: ["Let's slow this down and make it workable.", "I hear you, and we can make this practical."],
+};
+const DOMAIN_CLOSINGS = {
+    sadness: ["Be gentle tonight; your job is stability, not perfection.", "Today, reducing pain by 10% is enough."],
+    loneliness: ["One meaningful reach-out is better than silent waiting.", "Connection grows through small repeated contact."],
+    heartbreak: ["Protect your healing like a boundary, not a mood.", "Closure grows from distance plus structure."],
+    anxiety: ["Calm first, decisions second.", "Ground your body before solving your life."],
+    overthinking: ["Action will clear more fog than thinking.", "Choose movement over mental replay."],
+    self_doubt: ["Build proof, don’t wait for confidence.", "Confidence follows evidence, not the other way around."],
+    financial_stress: ["Stability first, ambition second.", "Predictable cash flow reduces emotional chaos."],
+    career_confusion: ["Direction comes from experiments, not overplanning.", "Pick one path for 2 weeks and test it."],
+    new_job_stress: ["Visibility and consistency beat perfection.", "Ask, align, execute, repeat."],
+    business_confusion: ["Sell one simple thing before scaling complexity.", "Real customer feedback is your compass."],
+    sleep_issues: ["Protect tonight’s wind-down like a meeting.", "Sleep rhythm is built by repetition."],
+    discipline_issues: ["Make it smaller until it becomes automatic.", "Consistency beats intensity every time."],
+    burnout: ["Recovery is the work right now.", "Protect energy before adding effort."],
+    general_support: ["One small honest step is enough for now.", "Start simple and stay consistent."],
+};
+const ADVICE_BANK = {
     sadness: [
-        { quote: "The greatest glory in living lies not in never falling, but in rising every time we fall.", author: "Nelson Mandela", explanation: "This reminds us that setbacks are part of life, but what matters is getting back up." },
-        { quote: "You are not your feelings. You just experience them.", author: "John Green", explanation: "Your emotions don't define who you are—they're just temporary visitors." },
-    ],
-    anxiety: [
-        { quote: "Anxiety is like a rocking chair. It gives you something to do, but it doesn't get you very far.", author: "Jodi Picoult", explanation: "Worry can feel productive, but it often keeps us stuck instead of moving forward." },
-        { quote: "The way you relate to others is the way you relate to yourself.", author: "Sharon Salzberg", explanation: "How we treat ourselves often mirrors our relationships with others." },
-    ],
-    anger: [
-        { quote: "Holding onto anger is like drinking poison and expecting the other person to die.", author: "Buddha", explanation: "Anger harms us more than anyone else when we hold onto it." },
-        { quote: "Speak when you are angry and you will make the best speech you will ever regret.", author: "Ambrose Bierce", explanation: "Acting on anger often leads to regret; pause and reflect first." },
+        "Name the feeling and the unmet need in one line each.",
+        "Pick one soft stabilizer: sunlight, warm shower, or 10-minute walk.",
+        "Tell one trusted person you are having a low-energy day.",
     ],
     loneliness: [
-        { quote: "The most terrible poverty is loneliness, and the feeling of being unloved.", author: "Mother Teresa", explanation: "Loneliness can feel like the deepest kind of poverty, but connection is possible." },
-        { quote: "Loneliness is not lack of company, loneliness is lack of purpose.", author: "Guillermo Maldonado", explanation: "Sometimes loneliness stems from feeling disconnected from meaning or direction." },
+        "Send one low-pressure message to someone safe.",
+        "Join one recurring group where contact is predictable.",
+        "Replace one hour of passive scrolling with an active social action.",
     ],
-    fear: [
-        { quote: "The only thing we have to fear is fear itself.", author: "Franklin D. Roosevelt", explanation: "Fear can be paralyzing, but facing it directly often reduces its power." },
-        { quote: "Courage is not the absence of fear, but rather the assessment that something else is more important than fear.", author: "Franklin D. Roosevelt", explanation: "Being brave doesn't mean not feeling afraid—it means acting despite the fear." },
+    heartbreak: [
+        "Use a strict 7-day no-contact rule to protect healing.",
+        "Write what the relationship gave you and what it cost you.",
+        "Return to body regulation before meaning-making: sleep, food, movement.",
     ],
-    motivation: [
-        { quote: "The journey of a thousand miles begins with a single step.", author: "Lao Tzu", explanation: "Big changes start with small, manageable actions." },
-        { quote: "You miss 100% of the shots you don't take.", author: "Wayne Gretzky", explanation: "Taking action, even imperfectly, is better than doing nothing." },
+    anxiety: [
+        "Write facts vs fears in two columns and act only on facts.",
+        "Do one 4-6 breathing cycle for 3 minutes before decisions.",
+        "Shrink the horizon: solve only the next 24 hours.",
+    ],
+    overthinking: [
+        "Set a 10-minute decision timer and choose the smallest reversible step.",
+        "Create two options max, then choose one.",
+        "Move your body for 8 minutes before revisiting the thought loop.",
+    ],
+    self_doubt: [
+        "Create an evidence log: 3 wins + 1 next courageous action.",
+        "Replace 'Can I?' with 'What proof can I create this week?'",
+        "Ask one mentor-quality question to a credible person.",
+    ],
+    financial_stress: [
+        "Create a 14-day cash survival plan: essentials, one cut, one income action.",
+        "Audit recurring expenses and remove one low-value payment today.",
+        "Choose one low-risk income task and ship it within 48 hours.",
+    ],
+    career_confusion: [
+        "Pick one role target, one skill gap, one weekly evidence action.",
+        "Run 3 informational interviews with people in your target path.",
+        "Choose direction by experiments, not by waiting for certainty.",
+    ],
+    new_job_stress: [
+        "Clarify expectations with your manager in writing.",
+        "Send concise progress updates every 2 days.",
+        "Ask for one feedback point early and apply it quickly.",
+    ],
+    business_confusion: [
+        "Start with one service offer deliverable in 7 days.",
+        "Validate demand with 3 real customer conversations this week.",
+        "Avoid product complexity until you confirm willingness to pay.",
+    ],
+    sleep_issues: [
+        "Fix wake time first; bedtime follows naturally.",
+        "No caffeine after lunch for 7 days.",
+        "Use a 45-minute low-light, no-screen wind-down routine.",
+    ],
+    discipline_issues: [
+        "Define one non-negotiable 20-minute focus block daily.",
+        "Track completion, not motivation.",
+        "Lower task size until consistency becomes automatic.",
+    ],
+    burnout: [
+        "Cut one nonessential commitment this week.",
+        "Protect one recovery block daily with no negotiation.",
+        "Work in short cycles and schedule decompression deliberately.",
+    ],
+    general_support: [
+        "Choose one hard thing and one kind thing to do today.",
+        "Start with one clear, low-friction next step.",
+        "Check sleep, food, movement before major conclusions.",
     ],
 };
-// Emotional intelligence patterns with response variations
-const EMOTIONAL_PATTERNS = {
-    sadness: {
-        indicators: ["sad", "down", "depressed", "lonely", "empty", "hopeless", "blue", "heartbroken", "grief", "loss"],
-        validations: [
-            "I can feel the weight of what you're carrying. It's completely valid to feel this way.",
-            "What you're experiencing is real and deserves to be acknowledged.",
-            "Sadness is a natural response to loss or difficulty. Your feelings make sense.",
-            "It takes courage to sit with these feelings. I'm here with you.",
-        ],
-        closings: [
-            "You're not alone in this moment. Take it one gentle step at a time.",
-            "Your sadness doesn't diminish your worth. You matter.",
-            "Even in darkness, small moments of light can emerge. Be patient with yourself.",
-            "This feeling will shift. For now, simply be kind to yourself.",
-        ],
-    },
-    anxiety: {
-        indicators: ["anxious", "worried", "nervous", "panic", "overwhelmed", "racing thoughts", "fear", "scared", "terrified", "phobia"],
-        validations: [
-            "Anxiety can make everything feel urgent and overwhelming. You're experiencing something very real.",
-            "Your nervous system is trying to protect you, even though it might feel like too much.",
-            "It's understandable to feel anxious when facing uncertainty.",
-            "The intensity of your anxiety is valid, even if the threat isn't as big as it feels.",
-        ],
-        closings: [
-            "You have the capacity to move through this. Trust your ability to handle what comes.",
-            "Anxiety passes. This moment is temporary, even if it doesn't feel that way.",
-            "Your strength lies in acknowledging what you fear. That's already a victory.",
-            "Grounding yourself in the present moment can help ease the worry.",
-        ],
-    },
-    anger: {
-        indicators: ["angry", "frustrated", "mad", "furious", "upset", "annoyed", "rage", "irritated", "resentful"],
-        validations: [
-            "Anger is a powerful emotion that tells us something important needs our attention.",
-            "Your frustration signals that something matters to you. That's worth honoring.",
-            "Anger can be a healthy response to unfairness or disrespect.",
-            "What you're feeling is a valid message, not a flaw.",
-        ],
-        closings: [
-            "Your strength shows in your willingness to feel and process these emotions.",
-            "Channel this intensity into understanding what you truly need.",
-            "This anger can be a catalyst for meaningful change if you direct it wisely.",
-            "Your feelings have validity. Now let's find constructive ways forward.",
-        ],
-    },
-    loneliness: {
-        indicators: ["lonely", "alone", "isolated", "disconnected", "abandoned", "friendless", "solitude"],
-        validations: [
-            "Feeling lonely is a deeply human experience that many people share.",
-            "Loneliness doesn't mean there's something wrong with you.",
-            "Your need for connection is valid and important.",
-            "Even in isolation, you are worthy of care—starting with your own.",
-        ],
-        closings: [
-            "Connection is possible, even when it feels distant. You're worthy of meaningful relationships.",
-            "Reaching out, even in small ways, can be the first step toward connection.",
-            "Your isolation is temporary. Opportunities for connection are waiting.",
-            "You deserve to feel seen and heard. Start by seeing and hearing yourself.",
-        ],
-    },
-    confusion: {
-        indicators: ["confused", "unclear", "lost", "stuck", "don't know", "not sure", "overwhelmed by choices"],
-        validations: [
-            "Confusion often shows up when you're trying to navigate a complex or uncertain moment.",
-            "It's okay to not have every answer right now.",
-            "Feeling stuck is a common sign that you're ready for the next step, even if it's not obvious yet.",
-            "You don't need clarity immediately—just one small move forward.",
-        ],
-        closings: [
-            "Give yourself permission to take the next small step, even if the full path isn't clear yet.",
-            "Clarity often comes after action, not before it.",
-            "This moment of confusion can become a turning point if you stay curious.",
-            "Trust that the direction will emerge as you keep exploring.",
-        ],
-    },
-    overthinking: {
-        indicators: ["overthinking", "racing thoughts", "mind won't rest", "can't stop thinking", "analysis paralysis", "looping thoughts"],
-        validations: [
-            "Overthinking can feel like your mind is stuck on repeat.",
-            "Your brain is trying to protect you by rehearsing possibilities.",
-            "It's normal to get trapped in thought loops when something matters deeply.",
-            "Your effort to understand the situation is real, even if it becomes tiring.",
-        ],
-        closings: [
-            "Sometimes the kindest thing is to step away from the loop and breathe.",
-            "You don't have to solve everything in your head right now.",
-            "A small action can be more helpful than another replay of the same thoughts.",
-            "Your clarity will return when you give your mind some space.",
-        ],
-    },
-    burnout: {
-        indicators: ["burnout", "burned out", "tired of trying", "drained", "exhausted", "empty", "no energy"],
-        validations: [
-            "Burnout is a signal that your limits have been stretched too far.",
-            "It's not weakness to feel exhausted—it's a sign that you need rest.",
-            "You deserve a pause, not more pressure.",
-            "Your efforts matter, and your energy deserves protection.",
-        ],
-        closings: [
-            "Rest is part of the work. Protect your energy before pushing harder.",
-            "This feeling is a sign to rebuild your foundation, not to ignore it.",
-            "Start with one small boundary that gives you space to breathe.",
-            "You can recover from burnout with steady, compassionate choices.",
-        ],
-    },
-    self_doubt: {
-        indicators: ["self doubt", "not confident", "can't do this", "imposter", "unworthy", "not enough", "doubt myself"],
-        validations: [
-            "Self-doubt is a normal part of growth and change.",
-            "Your mind is asking for proof that you belong, even when you already do.",
-            "Doubt doesn't erase your abilities or worth.",
-            "It can help to notice the difference between how you feel and what you've already accomplished.",
-        ],
-        closings: [
-            "Your doubts are understandable, but they don't define what's possible for you.",
-            "Take one brave step, even if you don't feel completely sure yet.",
-            "Your courage is shown in continuing to move forward despite doubt.",
-            "Treat yourself with the same kindness you'd offer a friend feeling unsure.",
-        ],
-    },
-    business_stress: {
-        indicators: ["business", "startup", "entrepreneur", "launch", "company", "investors", "sales", "revenue"],
-        validations: [
-            "Running or starting a business can feel overwhelming and high-stakes.",
-            "Your stress is understandable when so much depends on your decisions.",
-            "It's normal to feel pressure when you're building something important.",
-            "This is a big challenge, and you're right to take it seriously.",
-        ],
-        closings: [
-            "Lean into small experiments first, rather than trying to solve everything at once.",
-            "A simple business choice can still lead to meaningful progress.",
-            "Your business goals are valid, even if the path is still taking shape.",
-            "Stay close to what you can control and let the rest unfold step by step.",
-        ],
-    },
-    financial_fear: {
-        indicators: ["money", "debt", "budget", "broke", "can't afford", "expenses", "financial fear", "no money"],
-        validations: [
-            "Money worries are deeply stressful and very common.",
-            "Your fear is a response to real uncertainty, not a personal failure.",
-            "It's okay to feel anxious when resources feel tight.",
-            "This is a valid concern, and it deserves a practical response.",
-        ],
-        closings: [
-            "Take one practical step to ease the pressure and build some breathing room.",
-            "Small financial moves can add up faster than you expect.",
-            "Focus on stability first, then expand from there.",
-            "Your financial fears are understandable, and you can begin to address them.",
-        ],
-    },
-    fear: {
-        indicators: ["fear", "afraid", "scared", "terrified", "frightened", "phobic", "dread", "panic"],
-        validations: [
-            "Fear is your body's natural response to perceived threats, and it's okay to feel it.",
-            "What you're afraid of matters to you, which is why the fear feels so real.",
-            "Fear is information, not a sign of weakness.",
-            "Your protective instincts are working. That's actually a sign you care about yourself.",
-        ],
-        closings: [
-            "Facing fears builds courage. You've already taken a brave step by reaching out.",
-            "Fear often shrinks when we look at it directly. You can do this.",
-            "Your capacity to acknowledge fear shows your strength, not your weakness.",
-            "Moving through fear, not around it, is where real growth happens.",
-        ],
-    },
-    motivation: {
-        indicators: ["motivated", "excited", "energized", "inspired", "ready", "driven", "enthusiastic"],
-        validations: [
-            "That energy and motivation is something to honor and protect.",
-            "Your enthusiasm is contagious and valuable. Protect this feeling.",
-            "This is exactly the kind of energy that creates real change.",
-            "Your drive matters. Let's channel it wisely.",
-        ],
-        closings: [
-            "This energy is yours to steward. Use it wisely and kindly.",
-            "Momentum is powerful. Ride this wave while honoring your limits.",
-            "Your motivation can create lasting change. Trust this feeling.",
-            "Keep this spark alive by taking action aligned with your values.",
-        ],
-    },
+const QUICK_REPLIES_BY_DOMAIN = {
+    sadness: ["Help me process this sadness", "Give me a 24-hour reset", "Ask me one deep question"],
+    loneliness: ["How do I reconnect?", "Give me one social action", "Help for evening loneliness"],
+    heartbreak: ["Help me heal after breakup", "I want closure", "How to stop checking old messages?"],
+    anxiety: ["Help me calm anxiety now", "Give me a grounding routine", "Help with tomorrow's fear"],
+    overthinking: ["Break my thought loop", "Help me decide quickly", "Give me a stop-overthinking method"],
+    self_doubt: ["Build confidence practically", "Challenge my inner critic", "Evidence-based self-trust steps"],
+    financial_stress: ["Make a 14-day money plan", "Reduce expenses", "Suggest low-risk income action"],
+    career_confusion: ["Pick a career direction", "Plan next 30 days", "Choose skill to learn"],
+    new_job_stress: ["Help with new job anxiety", "How to handle my manager?", "Plan first two weeks"],
+    business_confusion: ["Suggest low-risk business model", "Get first client", "Validate idea quickly"],
+    sleep_issues: ["Give sleep reset plan", "Night routine for overthinking", "Fix wake-up fatigue"],
+    discipline_issues: ["Build strict routine", "Beat procrastination", "Consistency system"],
+    burnout: ["Recover from burnout", "Create recovery week plan", "Set boundaries without guilt"],
+    general_support: ["Ask what matters most", "Give a clear next step", "Help me reflect deeply"],
 };
-const ROOT_PROBLEM_PATTERNS = {
-    social_connection: ["alone", "lonely", "isolated", "left out", "nobody", "friendless"],
-    life_purpose: ["purpose", "meaning", "direction", "lost", "why am i here", "what am i doing"],
-    self_worth: ["worthless", "not good enough", "failure", "shame", "unworthy", "deserve"],
-    overthinking: ["overthinking", "can't stop thinking", "racing thoughts", "mind won't rest", "analyze everything"],
-    burnout: ["burnout", "exhausted", "tired of trying", "drained", "no energy", "empty"],
-    business_stress: ["business", "startup", "entrepreneur", "company", "launch", "product", "service business"],
-    financial_fear: ["money", "budget", "debt", "financial", "broke", "can't afford", "no money", "expenses"],
-    fear_of_failure: ["afraid to fail", "fear of failure", "scared to fail", "don't want to fail", "failure"],
-    family_pressure: ["family pressure", "parents", "must", "expectations", "family wants", "family says"],
-    no_clarity: ["no clarity", "unclear", "don't know", "confused", "not sure", "lost"],
-    no_skill_confidence: ["not skilled", "can't do it", "not confident", "don't know how", "no skill", "inexperienced"],
-};
-const BUSINESS_DECISION_RULES = [
-    {
-        conditions: (message) => /\bbusiness\b|\bstartup\b|\bentrepreneur\b|\bstart.*business\b/i.test(message),
-        constraints: (message) => ({
-            lowBudget: /\b(no money|low budget|small budget|broke|can't afford|limited funds)\b/i.test(message),
-            student: /\bstudent\b|\bcollege\b|\bschool\b/i.test(message),
-            smallCity: /\bsmall city\b|\bsmall town\b|\bcollege town\b|\bremote area\b/i.test(message),
-            fearOfFailure: /\bfear.*failure\b|\bafraid.*fail\b|\bdon't want to fail\b/i.test(message),
-        }),
-        recommendation: "A service-oriented business or freelancing path is wiser right now than chasing a high-growth startup.",
-    },
-    {
-        conditions: (message) => /\bfinance\b|\bmoney\b|\bdebt\b|\bbudget\b|\bincome\b/i.test(message),
-        constraints: (message) => ({
-            urgent: /\b(bill|rent|loan|payment|deadline)\b/i.test(message),
-            lowConfidence: /\b(not sure|doubt|can't|don't know)\b/i.test(message),
-        }),
-        recommendation: "Focus on stabilizing your cash flow with small, reliable actions before taking on bigger risks.",
-    },
+const SUGGESTIONS = [
+    { label: "Start reflection journaling", href: "#healing", icon: "FileText" },
+    { label: "Run a breathing reset", href: "#breathe", icon: "Wind" },
+    { label: "Open growth journey", href: "#journey", icon: "Brain" },
 ];
-// Advanced response generation system
-class LumiResponseGenerator {
-    context;
-    sessionId;
-    constructor(context, sessionId) {
-        this.context = context;
-        this.sessionId = sessionId;
+function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+function unique(arr) {
+    return [...new Set(arr)];
+}
+function matchesKeyword(text, keyword) {
+    if (keyword.includes(" ")) {
+        return text.includes(keyword);
     }
-    // Step 1: Understand emotional state
-    analyzeEmotionalStates(message) {
-        const lowerMessage = message.toLowerCase();
-        const detected = new Set();
-        for (const [emotion, pattern] of Object.entries(EMOTIONAL_PATTERNS)) {
-            if (pattern.indicators.some(indicator => lowerMessage.includes(indicator))) {
-                detected.add(emotion);
-            }
-        }
-        if (lowerMessage.includes("tired of trying") || lowerMessage.includes("burnout") || lowerMessage.includes("burned out")) {
-            detected.add("burnout");
-        }
-        if (/\bcan't stop thinking\b|\boverthinking\b|\bbrain won't stop\b|\bracing thoughts\b/.test(lowerMessage)) {
-            detected.add("overthinking");
-        }
-        if (/\bself doubt\b|\bimposter\b|\bnot confident\b|\bdon't trust myself\b|\bnot enough\b/.test(lowerMessage)) {
-            detected.add("self_doubt");
-        }
-        if (/\bbusiness\b|\bstartup\b|\bentrepreneur\b|\blaunch\b/.test(lowerMessage)) {
-            detected.add("business_stress");
-        }
-        if (/\bmoney\b|\bdebt\b|\bbudget\b|\bbroke\b|\bcan't afford\b|\bfinancial\b/.test(lowerMessage)) {
-            detected.add("financial_fear");
-        }
-        if (/\bstuck\b|\bconfused\b|\bnot sure\b|\bno clarity\b|\buncertain\b/.test(lowerMessage)) {
-            detected.add("confusion");
-        }
-        if (detected.size === 0) {
-            return ["neutral"];
-        }
-        return Array.from(detected);
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`\\b${escaped}\\b`, "i");
+    return regex.test(text);
+}
+function createDefaultContext(sessionId) {
+    return {
+        sessionId,
+        messages: [],
+        emotionalPatterns: {
+            dominantEmotions: [],
+            recurringStruggles: [],
+            repeatedPatterns: [],
+            emotionalLoops: [],
+            lastEmotionalState: "general_support",
+        },
+        behaviorMemory: {
+            triggerKeywords: {},
+            adviceTried: {},
+            adviceFailed: [],
+            recentAdviceIds: [],
+            repeatedConcernCount: {},
+            domainConfidence: {
+                sadness: 0,
+                loneliness: 0,
+                heartbreak: 0,
+                anxiety: 0,
+                overthinking: 0,
+                self_doubt: 0,
+                financial_stress: 0,
+                career_confusion: 0,
+                new_job_stress: 0,
+                business_confusion: 0,
+                sleep_issues: 0,
+                discipline_issues: 0,
+                burnout: 0,
+                general_support: 0,
+            },
+            providerQuality: {
+                local: 1,
+                gpt: 1,
+                gemini: 1,
+            },
+        },
+        userProfile: {
+            preferences: { communicationStyle: "gentle", focusAreas: [] },
+            goals: { shortTerm: [], longTerm: [] },
+        },
+        conversationStats: {
+            totalMessages: 0,
+            commonTopics: {},
+            lastInteraction: new Date(),
+        },
+    };
+}
+class LumiEngine {
+    ctx;
+    constructor(ctx) {
+        this.ctx = ctx;
     }
-    // Step 2: Identify root problem
-    identifyRootProblems(message, emotionalStates) {
-        const problems = new Set();
-        const lowerMessage = message.toLowerCase();
-        for (const [problem, indicators] of Object.entries(ROOT_PROBLEM_PATTERNS)) {
-            if (indicators.some(indicator => lowerMessage.includes(indicator))) {
-                problems.add(problem);
-            }
-        }
-        if (emotionalStates.includes("burnout")) {
-            problems.add("burnout");
-        }
-        if (emotionalStates.includes("overthinking")) {
-            problems.add("overthinking");
-        }
-        if (emotionalStates.includes("self_doubt")) {
-            problems.add("self_worth");
-        }
-        if (lowerMessage.includes("start a business") || lowerMessage.includes("want to start business") || lowerMessage.includes("want to start a business")) {
-            problems.add("business_idea");
-        }
-        if (lowerMessage.includes("student") && lowerMessage.includes("business")) {
-            problems.add("student_business");
-        }
-        if (problems.size === 0) {
-            problems.add("general_support");
-        }
-        return Array.from(problems);
+    normalize(text) {
+        return text.toLowerCase().trim();
     }
-    determineDecisionStrategy(message, rootProblems) {
-        for (const rule of BUSINESS_DECISION_RULES) {
-            if (rule.conditions(message)) {
-                const advice = rule.recommendation;
-                if (rootProblems.includes("business_idea") || rootProblems.includes("business_stress") || rootProblems.includes("student_business")) {
-                    return advice;
+    isGreeting(message) {
+        return GREETING_PATTERN.test(this.normalize(message));
+    }
+    detectDomains(message) {
+        const text = this.normalize(message);
+        const scores = Object.fromEntries(Object.keys(DOMAIN_PATTERNS).map((d) => [d, 0]));
+        const directMatches = new Set();
+        for (const [domain, words] of Object.entries(DOMAIN_PATTERNS)) {
+            for (const keyword of words) {
+                if (matchesKeyword(text, keyword)) {
+                    scores[domain] += 1;
+                    directMatches.add(domain);
                 }
             }
         }
-        return null;
+        if (scores.discipline_issues > 0 && text.includes("tired"))
+            scores.burnout += 1;
+        if (scores.anxiety > 0 && text.includes("alone"))
+            scores.loneliness += 1;
+        if (scores.business_confusion > 0 && text.includes("fear"))
+            scores.self_doubt += 1;
+        // Only nudge domains already present in the message; avoid memory drift across emotions.
+        for (const d of directMatches) {
+            scores[d] += (this.ctx.behaviorMemory.domainConfidence[d] || 0) * 0.05;
+        }
+        const sorted = Object.entries(scores)
+            .filter(([_, score]) => score > 0)
+            .sort((a, b) => b[1] - a[1])
+            .map(([domain]) => domain);
+        return sorted.length ? sorted.slice(0, 3) : ["general_support"];
     }
-    registerPatternInContext(rootProblems, emotionalStates) {
-        const repeated = [];
-        for (const problem of rootProblems) {
-            if (this.context.emotionalPatterns.recurringStruggles.includes(problem)) {
-                repeated.push(problem);
+    detectRootCauses(message, domains) {
+        const text = this.normalize(message);
+        const causes = new Set();
+        for (const [cause, keys] of Object.entries(ROOT_CAUSE_PATTERNS)) {
+            if (keys.some((k) => matchesKeyword(text, k)))
+                causes.add(cause);
+        }
+        if (domains.includes("financial_stress"))
+            causes.add("resource_pressure");
+        if (domains.includes("business_confusion")) {
+            causes.add("lack_of_clarity");
+            causes.add("fear_of_failure");
+        }
+        if (domains.includes("overthinking"))
+            causes.add("perfectionism");
+        if (domains.includes("burnout"))
+            causes.add("workload_overload");
+        if (domains.includes("sleep_issues"))
+            causes.add("sleep_deprivation");
+        if (domains.includes("self_doubt"))
+            causes.add("low_self_trust");
+        if (domains.includes("loneliness"))
+            causes.add("social_disconnection");
+        if (causes.size === 0)
+            causes.add("general_support");
+        return [...causes];
+    }
+    updateLearning(message, domains, causes) {
+        const tokens = this.normalize(message).split(/\s+/).filter((w) => w.length > 3);
+        for (const token of tokens) {
+            this.ctx.behaviorMemory.triggerKeywords[token] =
+                (this.ctx.behaviorMemory.triggerKeywords[token] || 0) + 1;
+        }
+        for (const d of domains) {
+            this.ctx.behaviorMemory.domainConfidence[d] =
+                (this.ctx.behaviorMemory.domainConfidence[d] || 0) + 1;
+            if (!this.ctx.emotionalPatterns.dominantEmotions.includes(d)) {
+                this.ctx.emotionalPatterns.dominantEmotions.push(d);
             }
-            else {
-                this.context.emotionalPatterns.recurringStruggles.push(problem);
+            else if (!this.ctx.emotionalPatterns.repeatedPatterns.includes(d)) {
+                this.ctx.emotionalPatterns.repeatedPatterns.push(d);
             }
         }
-        for (const emotion of emotionalStates) {
-            if (this.context.emotionalPatterns.dominantEmotions.includes(emotion)) {
-                if (!this.context.emotionalPatterns.repeatedPatterns.includes(emotion)) {
-                    this.context.emotionalPatterns.repeatedPatterns.push(emotion);
-                }
+        for (const c of causes) {
+            this.ctx.behaviorMemory.repeatedConcernCount[c] =
+                (this.ctx.behaviorMemory.repeatedConcernCount[c] || 0) + 1;
+            if (!this.ctx.emotionalPatterns.recurringStruggles.includes(c)) {
+                this.ctx.emotionalPatterns.recurringStruggles.push(c);
+            }
+            else if (!this.ctx.emotionalPatterns.emotionalLoops.includes(c)) {
+                this.ctx.emotionalPatterns.emotionalLoops.push(c);
             }
         }
-        if (repeated.length > 0) {
-            return `I notice this has come up before: ${repeated.join(", ")}. Let's address it with a clearer focus this time.`;
-        }
-        return null;
+        this.ctx.emotionalPatterns.lastEmotionalState = domains[0];
     }
-    // Step 3: Validate feelings with variety
-    validateFeelings(emotionalState) {
-        const pattern = EMOTIONAL_PATTERNS[emotionalState];
-        if (pattern && pattern.validations) {
-            return pickVaried(pattern.validations, this.sessionId, "validations");
+    decisionInsight(message, domains) {
+        const text = this.normalize(message);
+        if (domains.includes("business_confusion")) {
+            const lowBudget = /\b(no money|broke|low budget|can't afford|small budget)\b/i.test(text);
+            const student = /\b(student|college|school)\b/i.test(text);
+            const smallCity = /\b(small city|small town|remote area)\b/i.test(text);
+            if (lowBudget || student || smallCity) {
+                return "Given your constraints, start with a service-based model. It is lower risk, faster to validate, and more practical.";
+            }
+            return "Start lean: one paid offer, one segment, one measurable result before expansion.";
         }
-        return "Your feelings are valid and worthy of attention.";
-    }
-    // Step 4: Provide practical action steps (with variety)
-    generatePracticalSteps(rootProblems, emotionalState) {
-        const actionPool = {
-            social_connection: [
-                "Send one message to someone you care about, even if it's just 'thinking of you'",
-                "Join a low-pressure social activity this week, like a walk or coffee",
-                "Comment or react to a post from someone you appreciate",
-            ],
-            life_purpose: [
-                "Write down three things that make you lose track of time",
-                "Identify one small way to contribute to something larger than yourself",
-                "List activities that felt meaningful in the past—what did they have in common?",
-            ],
-            self_worth: [
-                "List three things you've done this week that required courage",
-                "Practice one act of self-compassion, like speaking kindly to yourself",
-                "Ask yourself: what would I tell a friend in this situation?",
-            ],
-            future_uncertainty: [
-                "Write down your top three worries and one action for each",
-                "Focus on what you can control in the next 24 hours",
-                "Break down one big fear into smaller, manageable steps",
-            ],
-            career_pressure: [
-                "Break down your work into three manageable tasks for today",
-                "Take a 5-minute break to breathe and reset",
-                "Identify one task that aligns with your values—prioritize that",
-            ],
-            health_concerns: [
-                "Schedule that doctor's appointment you've been putting off",
-                "Research reliable health information from trusted sources",
-                "Take one small step toward better health today",
-            ],
-            perceived_injustice: [
-                "Write down what feels unfair and why it matters to you",
-                "Consider one constructive action you could take",
-                "Reflect on what boundary might help protect your peace",
-            ],
-            relationship_issues: [
-                "Express your feelings using 'I' statements when you're calm",
-                "Set a boundary that protects your well-being",
-                "Consider what you need from this relationship moving forward",
-            ],
-            burnout: [
-                "Take a 15-minute break and write down one thing you can say no to this week",
-                "Identify one task that can wait and give yourself permission to let it go",
-                "Notice one moment today where your energy feels lower and honor it with rest",
-            ],
-            overthinking: [
-                "Set a 5-minute timer and write down the thought loop, then close the notebook",
-                "Move your body for a short walk to shift your mind out of the loop",
-                "Ask yourself: what would I do if I trusted myself more in this moment?",
-            ],
-            business_idea: [
-                "Write one clear goal for your next week instead of trying to solve the whole business",
-                "Identify a small, low-cost test you can run to learn what customers want",
-                "List one strength you already have that could become a simple service offering",
-            ],
-            business_stress: [
-                "Name one business pressure and one small action to reduce it today",
-                "Focus on what you can control instead of everything that feels uncertain",
-                "Talk through one idea with a trusted friend or mentor, even if it's not perfect",
-            ],
-            financial_fear: [
-                "Write down your three most urgent expenses and one step to address each",
-                "Look for one small way to save or earn a little extra this week",
-                "Separate facts from fears by checking the actual numbers once",
-            ],
-            family_pressure: [
-                "Write down what you want, then decide what you're willing to say no to",
-                "Practice one calm sentence that explains your priority to your family",
-                "Set one small boundary that protects your mental space",
-            ],
-            no_clarity: [
-                "Choose one small next step, even if it's not the perfect one",
-                "Write down what you know and what you still need to learn",
-                "Ask yourself: what is one thing I can test right now?",
-            ],
-            no_skill_confidence: [
-                "Identify one skill you could improve with a single short practice session",
-                "Find one helpful resource or mentor for the area you feel unsure about",
-                "Remember one time you learned something new and how you did it",
-            ],
-            general_support: [
-                "Take three slow breaths, noticing the sensation of air entering and leaving your body",
-                "Write down one thing you're grateful for, no matter how small",
-                "Do one small act of self-care that feels manageable right now",
-            ],
-        };
-        const steps = [];
-        for (const problem of rootProblems) {
-            const pool = actionPool[problem] || actionPool.general_support;
-            steps.push(pickRandom(pool));
-        }
-        // If no steps added, use general support actions
-        if (steps.length === 0) {
-            const generalPool = actionPool.general_support;
-            return [generalPool[0], generalPool[1], generalPool[2]].slice(0, 3);
-        }
-        return steps.slice(0, 3); // Limit to 3 steps
-    }
-    // Step 5: Suggest long-term improvement strategy
-    suggestLongTermStrategy(rootProblems, emotionalState) {
-        const strategies = {
-            social_connection: "Building meaningful connections takes time. Consider joining a club or group based on your interests, or reaching out to old friends. Start with low-pressure interactions and build from there.",
-            life_purpose: "Finding purpose often comes from exploring what truly matters to you. Try the 'Ikigai' framework: what you love, what you're good at, what the world needs, and what you can be paid for.",
-            self_worth: "Self-worth grows through small, consistent acts of self-compassion and achievement. Consider keeping a 'wins journal' and practicing daily gratitude for your own efforts.",
-            future_uncertainty: "Building resilience to uncertainty involves both practical planning and emotional acceptance. Create contingency plans for your biggest fears while practicing mindfulness.",
-            career_pressure: "Career satisfaction often comes from aligning your work with your values. Consider what aspects of your job energize you and what drains you, then explore ways to increase the energizing parts.",
-            health_concerns: "Taking charge of your health involves both prevention and early intervention. Build healthy habits gradually and stay informed about your health needs.",
-            perceived_injustice: "Addressing injustice requires both inner work and outer action. Focus on what you can influence while protecting your peace of mind.",
-            relationship_issues: "Healthy relationships require clear communication and boundaries. Consider what you need and how to express it effectively.",
-            burnout: "Recovery from burnout is about rebuilding rest, boundaries, and a sustainable pace. Start by scheduling regular breaks and reducing one source of pressure.",
-            overthinking: "Overthinking loosens when you shift from analysis to action. Try a short experiment or a simple daily routine to move your thoughts into motion.",
-            business_idea: "For business ideas, begin with a small test rather than a perfect plan. Validate one offer with a simple customer conversation or pilot service.",
-            business_stress: "When business stress is high, focus on one manageable part of your plan. Protect your energy and simplify your next step.",
-            financial_fear: "Financial security builds from small, consistent improvements. Track your spending, prioritize urgent needs, and create a realistic short-term plan.",
-            family_pressure: "Family pressure can feel heavy, so build your own boundaries gently. Clearly communicate your priorities and protect your mental space.",
-            no_clarity: "Clarity often appears when you narrow your focus to one choice at a time. Choose a small experiment and learn from the result.",
-            no_skill_confidence: "Skill confidence grows through repeated practice and feedback. Start with a small learning step and celebrate how far you've already come.",
-        };
-        const primaryProblem = rootProblems[0];
-        return strategies[primaryProblem] ||
-            "Long-term growth comes from consistent small actions. Consider establishing one or two daily practices that support your well-being.";
-    }
-    // Step 6: End with calm clarity (varied)
-    generateClosing(emotionalState) {
-        const pattern = EMOTIONAL_PATTERNS[emotionalState];
-        if (pattern && pattern.closings) {
-            return pickVaried(pattern.closings, this.sessionId, "closings");
-        }
-        return "Remember: growth happens in the space between struggle and surrender. You've got this.";
-    }
-    // Generate wisdom quote based on context
-    selectWisdomQuote(emotionalState) {
-        const quotes = WISDOM_LIBRARY[emotionalState];
-        if (quotes && quotes.length > 0) {
-            return quotes[Math.floor(Math.random() * quotes.length)];
+        if (domains.includes("financial_stress")) {
+            return "Prioritize cash stability first, then growth bets.";
         }
         return null;
     }
-    // Main response generation method
-    generateResponse(message) {
-        // Analyze the message using layered reasoning
-        const emotionalStates = this.analyzeEmotionalStates(message);
-        const primaryEmotion = emotionalStates[0] || "neutral";
-        const rootProblems = this.identifyRootProblems(message, emotionalStates);
-        const decisionStrategy = this.determineDecisionStrategy(message, rootProblems);
-        const repeatedPatternMessage = this.registerPatternInContext(rootProblems, emotionalStates);
-        // Update context with new analysis
-        this.context.emotionalPatterns.lastEmotionalState = primaryEmotion;
-        for (const emotion of emotionalStates) {
-            if (!this.context.emotionalPatterns.dominantEmotions.includes(emotion)) {
-                this.context.emotionalPatterns.dominantEmotions.push(emotion);
-            }
-        }
-        // Build response using structured approach
-        let responseText = "";
-        // Awareness of repeated patterns
-        if (repeatedPatternMessage) {
-            responseText += `**${repeatedPatternMessage}**\n\n`;
-        }
-        // Start with validation
-        responseText += `**${this.validateFeelings(primaryEmotion)}**\n\n`;
-        // Add practical steps
-        const practicalSteps = this.generatePracticalSteps(rootProblems, primaryEmotion);
-        if (practicalSteps.length > 0) {
-            responseText += "**Here's what you can do right now:**\n";
-            practicalSteps.forEach((step, index) => {
-                responseText += `• ${step}\n`;
-            });
-            responseText += "\n";
-        }
-        // Add targeted wisdom quote with explanation
-        const wisdom = this.selectWisdomQuote(primaryEmotion);
-        if (wisdom) {
-            responseText += `💭 **"${wisdom.quote}"**\n— *${wisdom.author}*\n\n`;
-            responseText += `**What this means:** ${wisdom.explanation}\n\n`;
-        }
-        if (decisionStrategy) {
-            responseText += `**Decision insight:** ${decisionStrategy}\n\n`;
-        }
-        // Add long-term strategy
-        responseText += `**For the longer term:** ${this.suggestLongTermStrategy(rootProblems, primaryEmotion)}\n\n`;
-        // End with closing
-        responseText += `**${this.generateClosing(primaryEmotion)}**`;
-        // Generate suggestions and follow-ups
-        const suggestions = this.generateSuggestions(rootProblems, primaryEmotion);
-        const followUpQuestions = this.generateFollowUpQuestions(rootProblems, primaryEmotion);
+    makeLayeredPlan(message) {
+        const domains = this.detectDomains(message);
+        const rootCauses = this.detectRootCauses(message, domains);
+        this.updateLearning(message, domains, rootCauses);
         return {
-            message: responseText,
-            suggestions,
-            quickReplies: followUpQuestions,
-            emotionalInsight: `I sense you're experiencing **${emotionalStates.join(" + ")}** related to ${rootProblems.join(" and ")}. This is a normal part of being human.`,
-            emotionalStates,
-            rootProblems,
+            domains,
+            primaryDomain: domains[0],
+            rootCauses,
+            decisionInsight: this.decisionInsight(message, domains),
+            patternFlags: this.ctx.emotionalPatterns.emotionalLoops.slice(-2),
+            style: this.ctx.userProfile.preferences.communicationStyle,
         };
     }
-    generateSuggestions(rootProblems, emotionalState) {
-        const suggestions = [];
-        if (rootProblems.includes("social_connection")) {
-            suggestions.push({ label: "Explore connection practices", href: "#healing", icon: "Heart" });
-        }
-        if (rootProblems.includes("business_idea") || rootProblems.includes("business_stress") || rootProblems.includes("student_business")) {
-            suggestions.push({ label: "Explore business mindset support", href: "#journey", icon: "Brain" });
-        }
-        if (rootProblems.includes("financial_fear")) {
-            suggestions.push({ label: "Review financial wellness tools", href: "#wellness", icon: "Activity" });
-        }
-        if (emotionalState === "anxiety") {
-            suggestions.push({ label: "Try breathing exercises", href: "#breathe", icon: "Wind" });
-        }
-        if (rootProblems.includes("life_purpose")) {
-            suggestions.push({ label: "Reflect on your journey", href: "#journey", icon: "Sun" });
-        }
-        // Always include general wellness check
-        suggestions.push({ label: "Check your wellness", href: "#wellness", icon: "Activity" });
-        return suggestions.slice(0, 3); // Limit to 3 suggestions
+    selectAdvice(domain) {
+        const pool = ADVICE_BANK[domain] || ADVICE_BANK.general_support;
+        const indices = pool.map((_, idx) => idx);
+        const shuffled = indices.sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, 3).map((idx) => pool[idx]);
+        return selected;
     }
-    generateFollowUpQuestions(rootProblems, emotionalState) {
-        const questionPool = {
-            sadness: [
-                "What's one small thing that usually brings you comfort?",
-                "When did you first notice feeling this way?",
-                "What would help you feel more connected right now?",
-                "Is there someone you trust who you could talk to?",
-            ],
-            anxiety: [
-                "What specifically feels most threatening right now?",
-                "What's one thing you can control in this situation?",
-                "What would make you feel safer in this moment?",
-                "What's the worst that could happen, and how would you handle it?",
-            ],
-            anger: [
-                "What do you think this anger is trying to protect?",
-                "What's one need this situation isn't meeting for you?",
-                "What would feel like a fair resolution?",
-                "What boundary might help protect your peace?",
-            ],
-            loneliness: [
-                "What's one relationship you'd like to nurture?",
-                "What kind of connection would feel most healing right now?",
-                "What small step could you take toward connection today?",
-            ],
-            confusion: [
-                "What is one small choice that feels clearer than the rest?",
-                "What information do you still need to feel more certain?",
-                "What can you test quickly to reduce the uncertainty?",
-            ],
-            overthinking: [
-                "What would happen if you let one thought go for a little while?",
-                "What does your body need right now instead of your mind?",
-                "Can you choose one action that doesn't require a perfect answer?",
-            ],
-            burnout: [
-                "What is one thing you can stop doing this week?",
-                "What would rest look like for you today?",
-                "Where can you create a little more breathing room in your schedule?",
-            ],
-            self_doubt: [
-                "What proof do you have that you can do this?",
-                "What would you tell a friend who felt this unsure?",
-                "What small step would feel courageous even if it isn't perfect?",
-            ],
-            business_stress: [
-                "What is the most important business question you need clarity on?",
-                "Which part of this plan feels most overwhelming?",
-                "What practical step would make today feel less stressful?",
-            ],
-            financial_fear: [
-                "What is the smallest money concern you can solve first?",
-                "What resources do you already have that can help you feel more stable?",
-                "Who could you ask for practical advice about this situation?",
-            ],
-            business_idea: [
-                "What would a simple, low-risk version of this business look like?",
-                "Who is the first person you'd want to learn from about this idea?",
-                "What problem are you solving for someone else?",
-            ],
-            student_business: [
-                "How can this idea fit around your studies?",
-                "What low-cost way can you test this while still keeping your focus?",
-                "What is one thing you can learn from this week?",
-            ],
-            family_pressure: [
-                "What do you want to keep for yourself, regardless of others' expectations?",
-                "What would make you feel more in control of this situation?",
-                "How can you gently share your needs with the people around you?",
-            ],
-            no_clarity: [
-                "What is one decision you can make today, even if it's small?",
-                "What facts are clear enough to act on?",
-                "What do you need to feel a bit more certain?",
-            ],
-            no_skill_confidence: [
-                "What would you like to practice in a short, low-pressure way?",
-                "What evidence do you have that you can grow this skill?",
-                "Who could you ask for feedback or mentorship?",
-            ],
-            fear: [
-                "What specifically are you afraid might happen?",
-                "What's helped you face fear before?",
-                "What support would help you feel braver?",
-            ],
-            motivation: [
-                "What are you most excited about right now?",
-                "What would momentum look like for you?",
-                "How can you protect this energy?",
-            ],
-            social_connection: [
-                "What's one relationship you'd like to nurture?",
-                "Who makes you feel seen and understood?",
-            ],
-            life_purpose: [
-                "What activities make you feel most alive?",
-                "What impact do you want to have?",
-            ],
-            self_worth: [
-                "What would you tell a friend who felt this way?",
-                "What are you proud of about yourself?",
-            ],
-            general: [
-                "What's the most important thing on your mind right now?",
-                "What would make today feel a little easier?",
-                "How can I best support you in this moment?",
-            ],
-        };
-        const questions = [];
-        // Get emotion-specific questions
-        const emotionQuestions = questionPool[emotionalState] || questionPool.general;
-        questions.push(pickRandom(emotionQuestions));
-        // Get problem-specific questions
-        for (const problem of rootProblems) {
-            const pool = questionPool[problem];
-            if (pool && pool.length > 0) {
-                questions.push(pickRandom(pool));
+    antiStaticRewrite(candidate) {
+        const assistantHistory = this.ctx.messages
+            .filter((m) => m.role === "assistant")
+            .slice(-4)
+            .map((m) => m.content.toLowerCase());
+        const normalized = candidate.toLowerCase();
+        const tooSimilar = assistantHistory.some((prev) => this.similarityScore(prev, normalized) > 0.8);
+        if (!tooSimilar)
+            return candidate;
+        return candidate
+            .replace("Reply 1 — Emotional Reflection", "Reply 1 — Emotional Mirror")
+            .replace("Reply 2 — Practical Strategy", "Reply 2 — Action Blueprint")
+            .replace("Reply 3 — Philosophical Clarity", "Reply 3 — Perspective Anchor")
+            .replace("Three anchors:", "Three perspective anchors:");
+    }
+    similarityScore(a, b) {
+        const setA = new Set(a.split(/\W+/).filter(Boolean));
+        const setB = new Set(b.split(/\W+/).filter(Boolean));
+        if (!setA.size || !setB.size)
+            return 0;
+        let common = 0;
+        for (const token of setA) {
+            if (setB.has(token))
+                common += 1;
+        }
+        return common / Math.max(setA.size, setB.size);
+    }
+    buildLocalResponse(plan) {
+        const domain = plan.primaryDomain;
+        const opener = pick(DOMAIN_OPENERS[domain] || DOMAIN_OPENERS.general_support);
+        const advice = this.selectAdvice(domain);
+        const quote = pick(DOMAIN_QUOTES[domain] || DOMAIN_QUOTES.general_support);
+        const closing = pick(DOMAIN_CLOSINGS[domain] || DOMAIN_CLOSINGS.general_support);
+        const styleLead = plan.style === "direct"
+            ? "Straight support"
+            : plan.style === "detailed"
+                ? "Support plan"
+                : plan.style === "concise"
+                    ? "Clear support"
+                    : "Gentle support";
+        const patternLine = plan.patternFlags.length
+            ? `I notice this repeating pattern: ${plan.patternFlags.join(" and ")}. We should interrupt it this time.`
+            : `Likely drivers: ${plan.rootCauses.slice(0, 2).join(", ")}.`;
+        const lines = [
+            `${styleLead}:`,
+            opener,
+            patternLine,
+            "",
+            "Try this now:",
+            `1) ${advice[0]}`,
+            `2) ${advice[1]}`,
+            `3) ${advice[2]}`,
+            plan.decisionInsight ? `Decision note: ${plan.decisionInsight}` : "",
+            "",
+            `Thought: "${quote.quote}" — ${quote.author}`,
+            closing,
+        ].filter(Boolean);
+        return lines.join("\n");
+    }
+    async providerSynthesis(plan, userMessage) {
+        const gptKey = process.env.OPENAI_API_KEY;
+        const geminiKey = process.env.GEMINI_API_KEY;
+        const systemPrompt = "You are Lumi, an emotionally intelligent companion. Return exactly three sections: Emotional Reflection, Practical Strategy, Philosophical Clarity. Be specific, non-generic, and non-repetitive.";
+        const payloadBrief = [
+            `User message: ${userMessage}`,
+            `Primary domain: ${plan.primaryDomain}`,
+            `Root causes: ${plan.rootCauses.join(", ")}`,
+            `Decision insight: ${plan.decisionInsight || "none"}`,
+            `Repeated patterns: ${plan.patternFlags.join(", ") || "none"}`,
+            `Communication style: ${plan.style}`,
+        ].join("\n");
+        const candidates = [];
+        const local = this.buildLocalResponse(plan);
+        candidates.push({ provider: "local", text: local });
+        if (gptKey) {
+            const gptText = await this.callOpenAI(systemPrompt, payloadBrief, gptKey);
+            if (gptText)
+                candidates.push({ provider: "gpt", text: gptText });
+        }
+        if (geminiKey) {
+            const geminiText = await this.callGemini(systemPrompt, payloadBrief, geminiKey);
+            if (geminiText)
+                candidates.push({ provider: "gemini", text: geminiText });
+        }
+        let best = candidates[0];
+        let bestScore = -Infinity;
+        for (const candidate of candidates) {
+            const score = this.scoreCandidate(candidate.text, candidate.provider);
+            if (score > bestScore) {
+                bestScore = score;
+                best = candidate;
             }
         }
-        // Fallback to general questions
-        if (questions.length === 0) {
-            questions.push(...questionPool.general);
+        this.ctx.behaviorMemory.providerQuality[best.provider] =
+            (this.ctx.behaviorMemory.providerQuality[best.provider] || 1) + 0.2;
+        return best;
+    }
+    scoreCandidate(text, provider) {
+        const lenScore = Math.min(text.length / 1200, 1.2);
+        const structureScore = Number(text.includes("Reply 1")) + Number(text.includes("Reply 2")) + Number(text.includes("Reply 3"));
+        const repetitionPenalty = this.similarityScore(text.toLowerCase(), this.ctx.messages.filter((m) => m.role === "assistant").slice(-1)[0]?.content?.toLowerCase() || "");
+        const providerBias = this.ctx.behaviorMemory.providerQuality[provider] || 1;
+        return lenScore + structureScore + providerBias - repetitionPenalty;
+    }
+    async callOpenAI(systemPrompt, userPrompt, apiKey) {
+        try {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 4500);
+            const res = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                    temperature: 0.7,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt },
+                    ],
+                }),
+                signal: ctrl.signal,
+            });
+            clearTimeout(timer);
+            if (!res.ok)
+                return null;
+            const data = (await res.json());
+            return data.choices?.[0]?.message?.content?.trim() || null;
         }
-        return questions.slice(0, 3);
+        catch {
+            return null;
+        }
+    }
+    async callGemini(systemPrompt, userPrompt, apiKey) {
+        try {
+            const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 4500);
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+                    generationConfig: { temperature: 0.7 },
+                }),
+                signal: ctrl.signal,
+            });
+            clearTimeout(timer);
+            if (!res.ok)
+                return null;
+            const data = (await res.json());
+            return data.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("").trim() || null;
+        }
+        catch {
+            return null;
+        }
+    }
+    greetingMessage() {
+        return [
+            "I am Lumi — your emotionally intelligent mentor-companion for difficult emotions and practical life decisions.",
+            "I reason through your message in layers: emotion, root causes, repeated patterns, and practical decision strategy.",
+            "I can dynamically synthesize replies with local intelligence and optional GPT/Gemini modules when configured.",
+            "Share what feels heavy right now, and I will respond with depth and clear action.",
+        ].join("\n\n");
+    }
+    async generate(message) {
+        if (this.isGreeting(message)) {
+            return {
+                message: this.greetingMessage(),
+                suggestions: [{ label: "Start reflection journey", href: "#journey", icon: "Sun" }],
+                quickReplies: ["I'm feeling anxious and stuck", "I'm confused about career", "I feel lonely lately"],
+                followUpQuestions: ["What has been weighing on you most this week?"],
+                emotionalInsight: "Lumi is active with adaptive memory, multi-layer reasoning, and dynamic response synthesis.",
+                emotionalStates: ["general_support"],
+                rootProblems: ["trust_building"],
+            };
+        }
+        const plan = this.makeLayeredPlan(message);
+        const synthesized = await this.providerSynthesis(plan, message);
+        const finalText = this.antiStaticRewrite(synthesized.text);
+        return {
+            message: finalText,
+            suggestions: SUGGESTIONS,
+            quickReplies: QUICK_REPLIES_BY_DOMAIN[plan.primaryDomain],
+            followUpQuestions: [
+                "Which is hardest right now: feeling, decision, or consistency?",
+                "What have you already tried that failed?",
+                "What real constraint must this plan respect?",
+            ],
+            emotionalInsight: `Signals: ${plan.domains.map((d) => d.replaceAll("_", " ")).join(" + ")}. Drivers: ${plan.rootCauses.join(", ")}. Engine: ${synthesized.provider}.`,
+            emotionalStates: plan.domains,
+            rootProblems: plan.rootCauses,
+        };
     }
 }
-// Chatbot route handler
 router.post("/chat", async (req, res) => {
     try {
-        // Validate request
-        const validatedData = ChatRequestSchema.parse(req.body);
-        const { message, context } = validatedData;
-        // Get or create conversation context
-        const sessionId = req.session.id || "anonymous";
-        let conversationContext = conversationStore.get(sessionId);
-        if (!conversationContext) {
-            conversationContext = {
-                sessionId,
-                messages: [],
-                emotionalPatterns: {
-                    dominantEmotions: [],
-                    recurringStruggles: [],
-                    progressAreas: [],
-                    lastEmotionalState: "",
-                    repeatedPatterns: [],
-                },
-                userProfile: {
-                    preferences: {
-                        communicationStyle: "gentle",
-                        focusAreas: [],
-                        avoidedTopics: [],
-                    },
-                    goals: {
-                        shortTerm: [],
-                        longTerm: [],
-                    },
-                },
-                conversationStats: {
-                    totalMessages: 0,
-                    averageResponseTime: 0,
-                    commonTopics: {},
-                    lastInteraction: new Date(),
-                },
-            };
-            conversationStore.set(sessionId, conversationContext);
+        const validated = ChatRequestSchema.parse(req.body);
+        const sessionId = (req.session?.id || "anonymous").toString();
+        const { message, context } = validated;
+        const loaded = cache.get(sessionId) || loadChatContext(sessionId) || createDefaultContext(sessionId);
+        if (context?.communicationStyle)
+            loaded.userProfile.preferences.communicationStyle = context.communicationStyle;
+        if (context?.userGoals?.length) {
+            loaded.userProfile.goals.shortTerm = unique([...loaded.userProfile.goals.shortTerm, ...context.userGoals]).slice(-12);
         }
-        // Add user message to context
-        conversationContext.messages.push({
+        loaded.messages.push({
             id: `user_${Date.now()}`,
             role: "user",
             content: message,
             timestamp: new Date(),
         });
-        // Generate response using Lumi
-        const generator = new LumiResponseGenerator(conversationContext, sessionId);
-        const response = generator.generateResponse(message);
-        // Add assistant response to context
-        conversationContext.messages.push({
+        const engine = new LumiEngine(loaded);
+        const result = await engine.generate(message);
+        loaded.messages.push({
             id: `assistant_${Date.now()}`,
             role: "assistant",
-            content: response.message,
+            content: result.message,
             timestamp: new Date(),
-            emotionalStates: response.emotionalStates,
-            rootProblems: response.rootProblems,
+            emotionalStates: result.emotionalStates,
+            rootProblems: result.rootProblems,
         });
-        // Update conversation stats
-        conversationContext.conversationStats.totalMessages++;
-        conversationContext.conversationStats.lastInteraction = new Date();
-        // Validate response
-        const validatedResponse = ChatResponseSchema.parse(response);
-        res.json(validatedResponse);
+        loaded.conversationStats.totalMessages += 1;
+        loaded.conversationStats.lastInteraction = new Date();
+        for (const d of result.emotionalStates || []) {
+            loaded.conversationStats.commonTopics[d] = (loaded.conversationStats.commonTopics[d] || 0) + 1;
+        }
+        cache.set(sessionId, loaded);
+        saveChatContext(sessionId, loaded);
+        res.json(ChatResponseSchema.parse(result));
     }
     catch (error) {
-        console.error("Chatbot error:", error);
+        console.error("Lumi chat error:", error);
         if (error instanceof z.ZodError) {
-            res.status(400).json({
-                error: "Invalid request data",
-                details: error.errors,
-            });
+            res.status(400).json({ error: "Invalid request", details: error.errors });
+            return;
         }
-        else {
-            res.status(500).json({
-                error: "Internal server error",
-                message: "Something went wrong while processing your message.",
-            });
-        }
+        res.status(500).json({
+            error: "Internal server error",
+            message: "Lumi could not process this message. Please try again.",
+        });
     }
 });
 export default router;

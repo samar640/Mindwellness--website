@@ -1,0 +1,131 @@
+{
+  "sessionId": "neq7-kpaa8bxXAmv15NWpXAHYPi0_daf",
+  "messages": [
+    {
+      "id": "user_1777281362502",
+      "role": "user",
+      "content": "I'm having a hard day",
+      "timestamp": "2026-04-27T09:16:02.502Z"
+    },
+    {
+      "id": "assistant_1777281362505",
+      "role": "assistant",
+      "content": "Support plan:\nI hear you, and we can make this practical.\nLikely drivers: general_support.\nTry this now:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nStart simple and stay consistent.",
+      "timestamp": "2026-04-27T09:16:02.505Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777281378060",
+      "role": "user",
+      "content": "Give a clear next step",
+      "timestamp": "2026-04-27T09:16:18.060Z"
+    },
+    {
+      "id": "assistant_1777281378064",
+      "role": "assistant",
+      "content": "Support plan:\nLet's slow this down and make it workable.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Check sleep, food, movement before major conclusions.\n2) Start with one clear, low-friction next step.\n3) Choose one hard thing and one kind thing to do today.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nStart simple and stay consistent.",
+      "timestamp": "2026-04-27T09:16:18.064Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777281403381",
+      "role": "user",
+      "content": "Ask what matters most",
+      "timestamp": "2026-04-27T09:16:43.381Z"
+    },
+    {
+      "id": "assistant_1777281403382",
+      "role": "assistant",
+      "content": "Support plan:\nI hear you, and we can make this practical.\nI notice this repeating pattern: general_support. We should interrupt it this time.\nTry this now:\n1) Choose one hard thing and one kind thing to do today.\n2) Start with one clear, low-friction next step.\n3) Check sleep, food, movement before major conclusions.\nThought: \"A journey of a thousand miles begins with a single step.\" — Lao Tzu\nOne small honest step is enough for now.",
+      "timestamp": "2026-04-27T09:16:43.382Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "general_support"
+    ],
+    "recurringStruggles": [
+      "general_support"
+    ],
+    "repeatedPatterns": [
+      "general_support"
+    ],
+    "emotionalLoops": [
+      "general_support"
+    ],
+    "lastEmotionalState": "general_support"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "having": 1,
+      "hard": 1,
+      "give": 1,
+      "clear": 1,
+      "next": 1,
+      "step": 1,
+      "what": 1,
+      "matters": 1,
+      "most": 1
+    },
+    "adviceTried": {},
+    "adviceFailed": [],
+    "recentAdviceIds": [],
+    "repeatedConcernCount": {
+      "general_support": 3
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 0,
+      "heartbreak": 0,
+      "anxiety": 0,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 3
+    },
+    "providerQuality": {
+      "local": 1.5999999999999999,
+      "gpt": 1,
+      "gemini": 1
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "detailed",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 3,
+    "commonTopics": {
+      "general_support": 3
+    },
+    "lastInteraction": "2026-04-27T09:16:43.382Z"
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "sessionId": "fLvzaryUHplYIfzGqbddX4CDVfCa7Xr0",
+  "messages": [
+    {
+      "id": "user_1777278204567",
+      "role": "user",
+      "content": "hii",
+      "timestamp": "2026-04-27T08:23:24.567Z"
+    },
+    {
+      "id": "assistant_1777278204567",
+      "role": "assistant",
+      "content": "Deep read:\n\nReply 1 — Emotional Reflection\nI hear the pressure behind your words.\nPrimary signal: general support.\nUnderlying drivers: general_support.\nThis is valid, and it also needs a strategic response.\n\nReply 2 — Practical Strategy\nLet's convert this into actions you can execute immediately.\n1) Choose one hard thing and one kind thing to do today.\n\nReply 3 — Philosophical Clarity\nThree perspective anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nSmall truthful actions beat dramatic promises every time.",
+      "timestamp": "2026-04-27T08:23:24.567Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777278233238",
+      "role": "user",
+      "content": "Help me reflect deeply",
+      "timestamp": "2026-04-27T08:23:53.239Z"
+    },
+    {
+      "id": "assistant_1777278233239",
+      "role": "assistant",
+      "content": "Deep read:\n\nReply 1 — Emotional Reflection\nI can see both the emotion and the decision fatigue in this.\nPrimary signal: general support.\nUnderlying drivers: general_support.\nRepeated loop detected: general_support. We should interrupt the pattern, not repeat comfort scripts.\n\nReply 2 — Practical Strategy\nLet's convert this into actions you can execute immediately.\n1) Choose one hard thing and one kind thing to do today.\n\nReply 3 — Philosophical Clarity\nThree perspective anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nYou do not need perfect certainty. You need one honest step and consistency.",
+      "timestamp": "2026-04-27T08:23:53.239Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777278290794",
+      "role": "user",
+      "content": "i am feeling anixous",
+      "timestamp": "2026-04-27T08:24:50.794Z"
+    },
+    {
+      "id": "assistant_1777278290795",
+      "role": "assistant",
+      "content": "Deep read:\n\nReply 1 — Emotional Reflection\nThis sounds heavier than a normal bad day.\nPrimary signal: general support.\nUnderlying drivers: general_support.\nRepeated loop detected: general_support. We should interrupt the pattern, not repeat comfort scripts.\n\nReply 2 — Practical Strategy\nLet's convert this into actions you can execute immediately.\n1) Choose one hard thing and one kind thing to do today.\n\nReply 3 — Philosophical Clarity\nThree perspective anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nClarity grows after action, not before it.",
+      "timestamp": "2026-04-27T08:24:50.795Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    },
+    {
+      "id": "user_1777278366876",
+      "role": "user",
+      "content": "i am feeling angry on my friend",
+      "timestamp": "2026-04-27T08:26:06.876Z"
+    },
+    {
+      "id": "assistant_1777278366877",
+      "role": "assistant",
+      "content": "Deep read:\n\nReply 1 — Emotional Reflection\nI hear the pressure behind your words.\nPrimary signal: general support.\nUnderlying drivers: general_support.\nRepeated loop detected: general_support. We should interrupt the pattern, not repeat comfort scripts.\n\nReply 2 — Practical Strategy\nHere is the practical plan.\n1) Choose one hard thing and one kind thing to do today.\n\nReply 3 — Philosophical Clarity\nThree perspective anchors:\n\"A journey of a thousand miles begins with a single step.\" — Lao Tzu\n\"Knowing yourself is the beginning of all wisdom.\" — Aristotle\n\"What we think, we become.\" — Buddha\nYour next move matters more than your current mood.",
+      "timestamp": "2026-04-27T08:26:06.877Z",
+      "emotionalStates": [
+        "general_support"
+      ],
+      "rootProblems": [
+        "general_support"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "general_support"
+    ],
+    "recurringStruggles": [
+      "general_support"
+    ],
+    "repeatedPatterns": [
+      "general_support"
+    ],
+    "emotionalLoops": [
+      "general_support"
+    ],
+    "lastEmotionalState": "general_support"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "help": 1,
+      "reflect": 1,
+      "deeply": 1,
+      "feeling": 2,
+      "anixous": 1,
+      "angry": 1,
+      "friend": 1
+    },
+    "adviceTried": {
+      "gen_1": 4
+    },
+    "adviceFailed": [],
+    "recentAdviceIds": [
+      "gen_1",
+      "gen_1",
+      "gen_1",
+      "gen_1"
+    ],
+    "repeatedConcernCount": {
+      "general_support": 4
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 0,
+      "heartbreak": 0,
+      "anxiety": 0,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 0,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 4
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "detailed",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 4,
+    "commonTopics": {
+      "general_support": 4
+    },
+    "lastInteraction": "2026-04-27T08:26:06.877Z"
+  }
+}

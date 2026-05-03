@@ -1,0 +1,88 @@
+{
+  "sessionId": "GTm3eMlsOyRf3qGss3OqP32hwht3veqD",
+  "messages": [
+    {
+      "id": "user_1777281197666",
+      "role": "user",
+      "content": "I am heartbroken after breakup",
+      "timestamp": "2026-04-27T09:13:17.666Z"
+    },
+    {
+      "id": "assistant_1777281197668",
+      "role": "assistant",
+      "content": "Gentle support:\nThis is heartbreak pain, not just a bad mood.\nLikely drivers: resource_pressure.\nTry this now:\n1) Return to body regulation before meaning-making: sleep, food, movement.\n2) Write what the relationship gave you and what it cost you.\n3) Use a strict 7-day no-contact rule to protect healing.\nDecision note: Prioritize cash stability first, then growth bets.\nThought: \"Out of suffering have emerged the strongest souls.\" — Khalil Gibran\nClosure grows from distance plus structure.",
+      "timestamp": "2026-04-27T09:13:17.668Z",
+      "emotionalStates": [
+        "heartbreak",
+        "financial_stress"
+      ],
+      "rootProblems": [
+        "resource_pressure"
+      ]
+    }
+  ],
+  "emotionalPatterns": {
+    "dominantEmotions": [
+      "heartbreak",
+      "financial_stress"
+    ],
+    "recurringStruggles": [
+      "resource_pressure"
+    ],
+    "repeatedPatterns": [],
+    "emotionalLoops": [],
+    "lastEmotionalState": "heartbreak"
+  },
+  "behaviorMemory": {
+    "triggerKeywords": {
+      "heartbroken": 1,
+      "after": 1,
+      "breakup": 1
+    },
+    "adviceTried": {},
+    "adviceFailed": [],
+    "recentAdviceIds": [],
+    "repeatedConcernCount": {
+      "resource_pressure": 1
+    },
+    "domainConfidence": {
+      "sadness": 0,
+      "loneliness": 0,
+      "heartbreak": 1,
+      "anxiety": 0,
+      "overthinking": 0,
+      "self_doubt": 0,
+      "financial_stress": 1,
+      "career_confusion": 0,
+      "new_job_stress": 0,
+      "business_confusion": 0,
+      "sleep_issues": 0,
+      "discipline_issues": 0,
+      "burnout": 0,
+      "general_support": 0
+    },
+    "providerQuality": {
+      "local": 1.2,
+      "gpt": 1,
+      "gemini": 1
+    }
+  },
+  "userProfile": {
+    "preferences": {
+      "communicationStyle": "gentle",
+      "focusAreas": []
+    },
+    "goals": {
+      "shortTerm": [],
+      "longTerm": []
+    }
+  },
+  "conversationStats": {
+    "totalMessages": 1,
+    "commonTopics": {
+      "heartbreak": 1,
+      "financial_stress": 1
+    },
+    "lastInteraction": "2026-04-27T09:13:17.668Z"
+  }
+}

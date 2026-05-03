@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Leaf, Menu, X, Search, LogIn, UserPlus, LayoutDashboard,
   LogOut, User, Droplets, BookOpen, Wind, Activity, CheckSquare,
-  Quote, Heart, ArrowRight, ChevronRight, Sparkles
+  Quote, Heart, ArrowRight, ChevronRight, Sparkles, Moon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
@@ -25,7 +25,7 @@ type SearchItem = {
   bg: string;
   href?: string;
   isRoute?: boolean;
-  isSpecial?: "water" | "books" | "chat";
+  isSpecial?: "water" | "books" | "chat" | "sleep";
 };
 
 const SEARCH_ITEMS: SearchItem[] = [
@@ -36,6 +36,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   { label: "Breathe", desc: "Guided breathing for anxiety & anger", icon: Wind, color: "text-sky-600", bg: "bg-sky-50 border-sky-100", href: "/breathe", isRoute: true },
   { label: "Diet & Hydration", desc: "BMI calculator and daily water intake", icon: Activity, color: "text-rose-600", bg: "bg-rose-50 border-rose-100", href: "/diet", isRoute: true },
   { label: "Daily Water Intake", desc: "Personalised hydration recommendations", icon: Droplets, color: "text-blue-600", bg: "bg-blue-50 border-blue-100", href: "/diet", isRoute: true },
+  { label: "Daily Sleep", desc: "Simple 4-step sleep check with a quick suggestion", icon: Moon, color: "text-indigo-600", bg: "bg-indigo-50 border-indigo-100", isSpecial: "sleep" as const },
   { label: "To-Do List", desc: "Manage and track your daily tasks", icon: CheckSquare, color: "text-teal-600", bg: "bg-teal-50 border-teal-100", href: "/todo", isRoute: true },
   { label: "Chat with Lumi", desc: "Talk to your wellness companion bot", icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50 border-purple-100", isSpecial: "chat" as const },
   { label: "Sign Up", desc: "Create a MindWellness account", icon: UserPlus, color: "text-primary", bg: "bg-primary/5 border-primary/10", href: "/signup", isRoute: true },
@@ -138,6 +139,139 @@ function WaterPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+const sleepQuestions = [
+  {
+    title: "How easy was it to fall asleep?",
+    options: ["Very easy", "A bit slow", "I tossed and turned", "I couldn’t sleep"],
+  },
+  {
+    title: "How refreshed did you feel when you woke up?",
+    options: ["Fully refreshed", "Mostly okay", "Still a bit tired", "Very groggy"],
+  },
+  {
+    title: "How regular was your bedtime last night?",
+    options: ["Same time as usual", "Within 30 minutes", "More than 1 hour later", "Very irregular"],
+  },
+  {
+    title: "How calm was your bedroom while you slept?",
+    options: ["Quiet and dark", "A little noisy", "Too warm or cold", "Distracting"],
+  },
+];
+
+function SleepTrackerPanel({ onClose }: { onClose: () => void }) {
+  const [activeStep, setActiveStep] = useState(0);
+  const [answers, setAnswers] = useState<string[]>(["", "", "", ""]);
+  const [result, setResult] = useState<string | null>(null);
+
+  const currentQuestion = sleepQuestions[activeStep];
+
+  const selectAnswer = (option: string) => {
+    const nextAnswers = [...answers];
+    nextAnswers[activeStep] = option;
+    setAnswers(nextAnswers);
+
+    if (activeStep < sleepQuestions.length - 1) {
+      setActiveStep(activeStep + 1);
+      return;
+    }
+
+    const score = nextAnswers.reduce((total, answer, index) => {
+      const map = [2, 1, 0, -1];
+      const answerIndex = sleepQuestions[index].options.indexOf(answer);
+      return total + (answerIndex >= 0 ? map[answerIndex] : 0);
+    }, 0);
+
+    const suggestions: string[] = [];
+    if (nextAnswers[0] === "I tossed and turned" || nextAnswers[0] === "I couldn’t sleep") {
+      suggestions.push("Start a 30-minute screen-free wind-down before bed.");
+    }
+    if (nextAnswers[1] === "Still a bit tired" || nextAnswers[1] === "Very groggy") {
+      suggestions.push("Wake up with soft light and a glass of water to support your rhythm.");
+    }
+    if (nextAnswers[2] === "More than 1 hour later" || nextAnswers[2] === "Very irregular") {
+      suggestions.push("Keep a consistent bedtime within 30 minutes each night.");
+    }
+    if (nextAnswers[3] === "Too warm or cold" || nextAnswers[3] === "Distracting") {
+      suggestions.push("Create a cool, dark, quiet sleep environment.");
+    }
+
+    if (score >= 5) {
+      setResult("Congratulations — your sleep looks good. Keep it up with the same routine tonight.");
+    } else {
+      setResult(`Your sleep could improve. ${suggestions.length ? suggestions.join(" ") : "Try a gentler wind-down and a consistent bedtime."}`);
+    }
+  };
+
+  const restart = () => {
+    setAnswers(["", "", "", ""]);
+    setActiveStep(0);
+    setResult(null);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 10 }}
+      className="p-4 bg-gradient-to-br from-indigo-50 to-violet-50 border-t border-indigo-100"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Moon className="w-4 h-4 text-indigo-600" />
+          <span className="text-sm font-semibold text-indigo-900">Daily Sleep</span>
+        </div>
+        <button onClick={onClose} className="text-indigo-400 hover:text-indigo-700">
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        <div className="rounded-3xl border border-indigo-100 bg-white/80 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-indigo-500 font-semibold">Question {activeStep + 1} of 4</p>
+              <p className="mt-2 text-sm text-slate-700 font-medium">{currentQuestion.title}</p>
+            </div>
+            <div className="flex gap-1">
+              {sleepQuestions.map((_, idx) => (
+                <span key={idx} className={`w-2.5 h-2.5 rounded-full ${idx <= activeStep ? "bg-indigo-600" : "bg-indigo-200"}`}></span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2">
+          {currentQuestion.options.map((option) => {
+            const selected = answers[activeStep] === option;
+            return (
+              <button
+                key={option}
+                onClick={() => selectAnswer(option)}
+                className={`w-full rounded-2xl border px-4 py-3 text-left text-sm font-medium transition-all ${
+                  selected
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                    : "bg-white border border-indigo-100 text-slate-700 hover:border-indigo-200 hover:bg-indigo-50"
+                }`}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+
+        {result && (
+          <div className="rounded-3xl border border-indigo-200 bg-white p-4 text-sm text-slate-700 space-y-3">
+            <p>{result}</p>
+            <button onClick={restart} className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors">
+              Restart sleep check
+            </button>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 const itemVariants = {
   hidden: { opacity: 0, x: -12, scale: 0.97 },
   visible: (i: number) => ({
@@ -155,6 +289,7 @@ export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [waterOpen, setWaterOpen] = useState(false);
+  const [sleepOpen, setSleepOpen] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [, navigate] = useLocation();
   const { user, logout } = useAuth();
@@ -173,6 +308,7 @@ export function Navbar() {
         setSearchOpen(false);
         setSearchQuery("");
         setWaterOpen(false);
+        setSleepOpen(false);
       }
     };
     document.addEventListener("mousedown", onClickOutside);
@@ -181,7 +317,7 @@ export function Navbar() {
 
   useEffect(() => {
     if (searchOpen) setTimeout(() => inputRef.current?.focus(), 80);
-    else { setWaterOpen(false); setSearchQuery(""); }
+    else { setWaterOpen(false); setSleepOpen(false); setSearchQuery(""); }
   }, [searchOpen]);
 
   const scrollTo = (href: string) => {
@@ -210,8 +346,14 @@ export function Navbar() {
     setSearchOpen(false);
     setSearchQuery("");
     setWaterOpen(false);
+    setSleepOpen(false);
     if (item.isSpecial === "chat") {
       window.dispatchEvent(new CustomEvent("open-chatbot"));
+      return;
+    }
+    if (item.isSpecial === "sleep") {
+      setSearchOpen(true);
+      setSleepOpen(true);
       return;
     }
     if (item.isRoute && item.href) navigate(item.href);
@@ -396,10 +538,13 @@ export function Navbar() {
                       {waterOpen && (
                         <WaterPanel onClose={() => setWaterOpen(false)} />
                       )}
+                      {sleepOpen && (
+                        <SleepTrackerPanel onClose={() => setSleepOpen(false)} />
+                      )}
                     </AnimatePresence>
 
                     {/* Footer */}
-                    {!waterOpen && (
+                    {!waterOpen && !sleepOpen && (
                       <div className="px-4 py-2.5 border-t border-black/5 flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">MindWellness <sup className="text-[9px]">(MW)</sup></span>
                         <span className="text-xs text-muted-foreground">{SEARCH_ITEMS.length} features</span>
@@ -496,6 +641,7 @@ export function Navbar() {
               </div>
               <AnimatePresence>
                 {waterOpen && <WaterPanel onClose={() => setWaterOpen(false)} />}
+                {sleepOpen && <SleepTrackerPanel onClose={() => setSleepOpen(false)} />}
               </AnimatePresence>
             </motion.div>
           )}
